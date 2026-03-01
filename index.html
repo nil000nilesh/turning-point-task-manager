@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Turning Point Solution — Client Desk</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<div class="bg-mesh"></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══════════ PIN OVERLAYS ══════════ -->
+<!-- AI PIN Setup -->
+<div class="pin-overlay" id="aiPinSetupPanel" style="display:none">
+  <div class="pin-card">
+    <div style="font-size:40px;margin-bottom:12px">🦊</div>
+    <div class="pin-title">AI Assistant PIN Setup</div>
+    <div class="pin-sub">Pehli baar: Apna AI PIN set karo.<br/>Yeh PIN AI assistant access ke liye use hoga.</div>
+    <input type="password" class="pin-input" id="aiPinInput" maxlength="8" placeholder="••••" onkeydown="setupPinKeyDown(event)"/>
+    <input type="password" class="pin-input" id="aiPinConfirm" maxlength="8" placeholder="Confirm PIN" onkeydown="setupPinKeyDown(event)"/>
+    <button class="btn-primary" style="width:100%" onclick="setupAIPIN()">Set PIN & Open AI</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:12px">PIN yaad rakhna — reset sirf settings se hoga</div>
+  </div>
+</div>
+
+<!-- AI PIN Verify -->
+<div class="pin-overlay" id="aiPinVerifyPanel" style="display:none">
+  <div class="pin-card">
+    <div style="font-size:40px;margin-bottom:12px">🔐</div>
+    <div class="pin-title">AI Assistant</div>
+    <div class="pin-sub">AI access ke liye PIN enter karo</div>
+    <input type="password" class="pin-input" id="aiPinVerifyInput" maxlength="8" placeholder="••••" onkeydown="aiPinKeyDown(event)" autofocus/>
+    <button class="btn-primary" style="width:100%;margin-bottom:10px" onclick="verifyAIPIN()">Open AI</button>
+    <button class="btn-secondary" style="width:100%;font-size:13px" onclick="document.getElementById('aiPinVerifyPanel').style.display='none'">Cancel</button>
+    <div style="font-size:12px;color:var(--muted);margin-top:12px;cursor:pointer" onclick="resetAIPIN()">🔄 Reset PIN</div>
+  </div>
+</div>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="screen-login" class="screen active">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh">
+    <div class="login-card">
+      <div class="brand-logo">🎯</div>
+      <div class="brand-name">Turning Point Solution</div>
+      <div class="brand-sub">Client Desk — Smart Team Management</div>
+      <button class="btn-google" onclick="loginWithGoogle()">
+        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <p class="powered-by">Powered by <span>Wisefox Solution</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MAIN APP ══════════ -->
+<div id="screen-app" class="screen">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo">🎯 TPS</div>
+      <div class="sub">Client Desk</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar"></div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <span class="user-role" id="sidebarRole">Member</span>
+      </div>
+    </div>
+
+    <!-- ADMIN NAV (only admin) -->
+    <div id="adminNav" style="display:none">
+      <div class="nav-section">Admin Panel</div>
+      <div class="nav-item" data-view="admin" onclick="showView('admin')">
+        <span class="icon">⚡</span> Admin Panel
+      </div>
+    </div>
+
+    <!-- LEADER/ADMIN NAV -->
+    <div id="leaderNav" style="display:none">
+      <div class="nav-section">Management</div>
+      <div class="nav-item" data-view="dashboard" onclick="showView('dashboard')">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" data-view="assign-task" onclick="showView('assign-task')">
+        <span class="icon">📋</span> Assign Task
+      </div>
+      <div class="nav-item" data-view="all-tasks" onclick="showView('all-tasks')">
+        <span class="icon">✅</span> All Tasks
+        <span class="nav-badge" id="taskBadge">0</span>
+      </div>
+      <div class="nav-item" data-view="clients" onclick="showView('clients')">
+        <span class="icon">🏢</span> Clients
+      </div>
+      <div class="nav-item" data-view="reminders" onclick="showView('reminders')">
+        <span class="icon">🔔</span> Reminders
+        <span class="nav-badge" id="reminderBadge">0</span>
+      </div>
+      <div class="nav-item" data-view="members" onclick="showView('members')">
+        <span class="icon">👥</span> Team Members
+      </div>
+      <div class="nav-item" data-view="notes" onclick="showView('notes')">
+        <span class="icon">📓</span> Notebook
+      </div>
+      <div class="nav-item" data-view="settings" onclick="showView('settings')">
+        <span class="icon">⚙️</span> Settings
+      </div>
+    </div>
+
+    <!-- MEMBER NAV (staff only) -->
+    <div id="memberNav" style="display:none">
+      <div class="nav-section">My Workspace</div>
+      <div class="nav-item active" data-view="my-tasks" onclick="showView('my-tasks')">
+        <span class="icon">📋</span> My Tasks
+        <span class="nav-badge" id="myTaskBadge">0</span>
+      </div>
+      <div class="nav-item" data-view="my-reminders" onclick="showView('my-reminders')">
+        <span class="icon">🔔</span> Reminders
+        <span class="nav-badge" id="myReminderBadge">0</span>
+      </div>
+      <div class="nav-item" data-view="my-progress" onclick="showView('my-progress')">
+        <span class="icon">📈</span> My Progress
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="logout()">
+        <span class="icon">🚪</span> Logout
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ═══ ADMIN: Admin Panel ═══ -->
+    <div id="view-admin" class="view">
+      <div class="page-header">
+        <div class="page-title">⚡ Admin <span>Panel</span></div>
+        <div class="page-sub">Manage teams, leaders and members — nil000nilesh@gmail.com</div>
+      </div>
+      <div class="grid-2">
+        <!-- Create Team -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">🏢 Create New Team</div></div>
+          <div class="form-group">
+            <label class="form-label">Team Name</label>
+            <input type="text" class="form-control" id="newTeamName" placeholder="e.g. Sales Team, Service Team"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Leader Email</label>
+            <input type="email" class="form-control" id="newTeamLeader" placeholder="leader@gmail.com"/>
+          </div>
+          <button class="btn-primary" onclick="adminCreateTeam()">Create Team & Assign Leader</button>
+        </div>
+        <!-- Add Member to Team -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">➕ Add Member to Team</div></div>
+          <div class="form-group">
+            <label class="form-label">Member Email</label>
+            <input type="email" class="form-control" id="newMemberEmailAdmin" placeholder="member@gmail.com"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Select Team</label>
+            <select class="form-control" id="memberTeamSelect"><option value="">Loading...</option></select>
+          </div>
+          <button class="btn-primary" onclick="adminAddMember()">Add to Team</button>
+        </div>
+      </div>
+      <!-- Teams List -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">🏢 All Teams</div></div>
+        <div id="adminTeamList">Loading...</div>
+      </div>
+      <!-- All Users -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">👥 All Users & Roles</div></div>
+        <div id="adminUserList">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ═══ LEADER: DASHBOARD ═══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="page-header">
+        <div class="page-title">Good day, <span id="dashName">Leader</span> 👋</div>
+        <div class="page-sub">Team overview — Turning Point Solution</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="statDone">0</div></div>
+        <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value yellow" id="statProgress">0</div></div>
+        <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value red" id="statOverdue">0</div></div>
+        <div class="stat-card"><div class="stat-label">Clients</div><div class="stat-value blue" id="statClients">0</div></div>
+        <div class="stat-card"><div class="stat-label">Team Members</div><div class="stat-value purple" id="statMembers">0</div></div>
+      </div>
+      <div style="margin-bottom:18px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
+          <span>Completion Rate</span><span id="dashCompletionRate" style="color:var(--accent)">0%</span>
+        </div>
+        <div class="progress-lg-wrap"><div class="progress-lg-fill" id="dashCompletionFill" style="width:0%"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Tasks</div>
+            <button class="btn-sm btn-done" onclick="showView('assign-task')">+ New Task</button>
+          </div>
+          <div class="task-list" id="recentTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Upcoming Reminders</div></div>
+          <div id="dashReminderList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LEADER: ASSIGN TASK ═══ -->
+    <div id="view-assign-task" class="view">
+      <div class="page-header">
+        <div class="page-title">📋 Assign <span>Task</span></div>
+        <div class="page-sub">Create and assign tasks to team members</div>
+      </div>
+      <div class="card" style="max-width:620px">
+        <div class="form-group">
+          <label class="form-label">Task Title *</label>
+          <input type="text" class="form-control" id="taskTitle" placeholder="e.g. Install Windows on client PC"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" id="taskDesc" rows="3" placeholder="Task details, instructions..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Assign To *</label>
+            <select class="form-control" id="taskAssignee"><option value="">Select Member...</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-control" id="taskPriority">
+              <option value="high">🔴 High</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Due Date</label>
+            <input type="date" class="form-control" id="taskDue"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Related Client</label>
+            <select class="form-control" id="taskClient"><option value="">No Client</option></select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="createTask()">Assign Task</button>
+      </div>
+    </div>
+
+    <!-- ═══ LEADER: ALL TASKS ═══ -->
+    <div id="view-all-tasks" class="view">
+      <div class="page-header">
+        <div class="page-title">✅ All <span>Tasks</span></div>
+        <div class="page-sub">Team task overview</div>
+      </div>
+      <div class="filter-tabs">
+        <span class="filter-tab active" onclick="setTaskFilter(this,'all')">All</span>
+        <span class="filter-tab" onclick="setTaskFilter(this,'pending')">⏳ Pending</span>
+        <span class="filter-tab" onclick="setTaskFilter(this,'inprogress')">🔄 In Progress</span>
+        <span class="filter-tab" onclick="setTaskFilter(this,'review')">👁 Review</span>
+        <span class="filter-tab" onclick="setTaskFilter(this,'done')">✅ Done</span>
+        <span class="filter-tab" onclick="setTaskFilter(this,'overdue')">⚠️ Overdue</span>
+      </div>
+      <div class="task-list" id="allTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks</div></div></div>
+    </div>
+
+    <!-- ═══ LEADER: CLIENTS ═══ -->
+    <div id="view-clients" class="view">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div class="page-title">🏢 <span>Clients</span></div>
+          <div class="page-sub">Agency clients, contacts, payments & orders</div>
+        </div>
+        <button class="btn-primary" onclick="openModal('addClientModal')">+ Add Client</button>
+      </div>
+      <!-- Filter tabs -->
+      <div class="filter-tabs">
+        <span class="filter-tab active" onclick="clientFilterTab(this,'all')">All</span>
+        <span class="filter-tab" onclick="clientFilterTab(this,'agency')">🏦 Agency</span>
+        <span class="filter-tab" onclick="clientFilterTab(this,'corporate')">🏢 Corporate</span>
+        <span class="filter-tab" onclick="clientFilterTab(this,'retail')">🛍 Retail</span>
+        <span class="filter-tab" onclick="clientFilterTab(this,'service')">🔧 Service</span>
+      </div>
+      <!-- Search -->
+      <div class="client-search-row">
+        <input type="text" class="form-control" placeholder="🔍 Search clients..." oninput="searchClients(this.value)" style="flex:1"/>
+      </div>
+      <div class="client-list-wrap" id="clientList"><div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-text">No clients yet</div></div></div>
+    </div>
+
+    <!-- ═══ LEADER: REMINDERS ═══ -->
+    <div id="view-reminders" class="view">
+      <div class="page-header">
+        <div class="page-title">🔔 <span>Reminders</span></div>
+        <div class="page-sub">Schedule reminders for team members</div>
+      </div>
+      <div class="card" style="max-width:560px">
+        <div class="card-title" style="margin-bottom:16px">Set New Reminder</div>
+        <div class="form-group">
+          <label class="form-label">Reminder Title</label>
+          <input type="text" class="form-control" id="remTitle" placeholder="e.g. Follow up with client"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" class="form-control" id="remTime"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">For Member</label>
+            <select class="form-control" id="remMember">
+              <option value="all">All Members</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="createReminder()">Set Reminder 🔔</button>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">All Reminders</div>
+        <div id="remindersList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+      </div>
+    </div>
+
+    <!-- ═══ LEADER: TEAM MEMBERS ═══ -->
+    <div id="view-members" class="view">
+      <div class="page-header">
+        <div class="page-title">👥 Team <span>Members</span></div>
+        <div class="page-sub">Manage your team</div>
+      </div>
+      <div class="card" style="max-width:520px;margin-bottom:22px">
+        <div class="card-title" style="margin-bottom:16px">Add Team Member</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" id="inviteName" placeholder="Member name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" id="inviteEmail" placeholder="member@gmail.com"/>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="inviteMember()">Add Member</button>
+      </div>
+      <div class="member-grid" id="memberGrid"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No members yet</div></div></div>
+    </div>
+
+    <!-- ═══ LEADER: NOTES/NOTEBOOK ═══ -->
+    <div id="view-notes" class="view">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div>
+          <div class="page-title">📓 <span>Notebook</span></div>
+          <div class="page-sub">Personal notes and quick captures</div>
+        </div>
+        <button class="btn-primary" onclick="newNote()">+ New Note</button>
+      </div>
+      <div class="notebook-header">
+        <input type="text" class="form-control" placeholder="🔍 Search notes..." oninput="searchNotes()" id="noteSearch" style="flex:1;max-width:280px"/>
+        <span class="filter-tab active" onclick="noteFilterTab(this,'all')">All</span>
+        <span class="filter-tab" onclick="noteFilterTab(this,'work')">💼 Work</span>
+        <span class="filter-tab" onclick="noteFilterTab(this,'client')">🏢 Client</span>
+        <span class="filter-tab" onclick="noteFilterTab(this,'personal')">👤 Personal</span>
+      </div>
+      <div class="note-grid" id="noteGrid"><div class="empty-state"><div class="empty-icon">📓</div><div class="empty-text">No notes yet. Click + to create.</div></div></div>
+    </div>
+
+    <!-- ═══ LEADER: SETTINGS ═══ -->
+    <div id="view-settings" class="view">
+      <div class="page-header">
+        <div class="page-title">⚙️ <span>Settings</span></div>
+        <div class="page-sub">API Key, PIN, App Configuration</div>
+      </div>
+      <!-- OpenAI API -->
+      <div class="settings-section">
+        <div class="settings-title">🤖 AI Configuration</div>
+        <div id="apiKeyStatus" class="api-key-status tag">Not Set</div>
+        <div style="margin:12px 0">
+          <label class="form-label">OpenAI API Key</label>
+          <div class="api-key-row">
+            <input type="password" class="form-control" id="apiKeyInput" placeholder="sk-..."/>
+            <button class="btn-sm btn-secondary" onclick="toggleApiKeyVisibility()">👁</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
+          <button class="btn-secondary" onclick="clearApiKey()">Remove</button>
+        </div>
+      </div>
+      <!-- AI PIN Change -->
+      <div class="settings-section">
+        <div class="settings-title">🔐 Change AI PIN</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Current PIN</label>
+            <input type="password" class="form-control" id="changePinOld" placeholder="Current PIN" maxlength="8"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">New PIN</label>
+            <input type="password" class="form-control" id="changePinNew" placeholder="New PIN (min 4)" maxlength="8"/>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="changePIN()">Change PIN</button>
+      </div>
+      <!-- App Info -->
+      <div class="settings-section">
+        <div class="settings-title">📊 App Information</div>
+        <div class="client-detail-grid">
+          <div class="client-detail-item"><div class="client-detail-label">App</div><div class="client-detail-value">TPS Client Desk v2.0</div></div>
+          <div class="client-detail-item"><div class="client-detail-label">Powered By</div><div class="client-detail-value" style="color:var(--accent)">Wisefox Solution 🦊</div></div>
+          <div class="client-detail-item"><div class="client-detail-label">Firebase Project</div><div class="client-detail-value">turning-point-task-manager</div></div>
+          <div class="client-detail-item"><div class="client-detail-label">AI Model</div><div class="client-detail-value">GPT-4o (via OpenAI)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ MEMBER: MY TASKS ═══ -->
+    <div id="view-my-tasks" class="view">
+      <div class="page-header">
+        <div class="page-title">📋 My <span>Tasks</span></div>
+        <div class="page-sub">Tasks assigned to you. Click on a task to update and chat.</div>
+      </div>
+      <div class="task-list" id="myTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks assigned yet</div></div></div>
+    </div>
+
+    <!-- ═══ MEMBER: MY REMINDERS ═══ -->
+    <div id="view-my-reminders" class="view">
+      <div class="page-header">
+        <div class="page-title">🔔 My <span>Reminders</span></div>
+        <div class="page-sub">Reminders set by your team leader</div>
+      </div>
+      <div id="myRemindersList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+    </div>
+
+    <!-- ═══ MEMBER: MY PROGRESS ═══ -->
+    <div id="view-my-progress" class="view">
+      <div class="page-header">
+        <div class="page-title">📈 My <span>Progress</span></div>
+        <div class="page-sub">Your task completion stats</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="myStatTotal">0</div></div>
+        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="myStatDone">0</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="myStatPending">0</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Completion Rate</div>
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--accent)" id="myProgressPct">0%</div>
+        </div>
+        <div class="progress-lg-wrap"><div class="progress-lg-fill" id="myProgressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════ FLOATING AI BUTTON ══════════ -->
+<button class="ai-float-btn" id="aiFloatBtn" title="AI Assistant (PIN protected)">🦊</button>
+<div class="ai-float-chat" id="aiFloatChat">
+  <div class="ai-float-header">
+    <div class="ai-float-title">🦊 AI Assistant</div>
+    <button class="ai-float-close" onclick="closeAIFloat()">✕</button>
+  </div>
+  <div class="ai-float-messages" id="aiFloatMessages"></div>
+  <div class="ai-float-input-row">
+    <textarea class="ai-float-input" id="aiFloatInput" placeholder="Hindi, English, Hinglish..." onkeydown="aiFloatKeyDown(event)" rows="1"></textarea>
+    <button class="btn-send" onclick="sendAIChat()">➤</button>
+  </div>
+</div>
+
+<!-- ══════════ NOTE EDITOR PANEL ══════════ -->
+<div class="note-editor-panel" id="noteEditorPanel">
+  <div class="note-editor-header">
+    <div class="note-editor-title">📓 Note</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-done" onclick="saveNote()">Save</button>
+      <button class="btn-sm btn-secondary" onclick="closeNoteEditor()">✕ Close</button>
+    </div>
+  </div>
+  <input type="text" class="note-editor-input" id="noteEditorTitle" placeholder="Note title..." oninput="noteAutoSave()"/>
+  <div class="form-row" style="margin-bottom:12px">
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Category</label>
+      <select class="form-control" id="noteEditorCategory" onchange="noteAutoSave()">
+        <option value="">General</option>
+        <option value="work">💼 Work</option>
+        <option value="client">🏢 Client</option>
+        <option value="personal">👤 Personal</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Color</label>
+      <div class="note-color-btns" id="noteColorBtns">
+        <button class="note-color-btn active" data-color="#181c24" style="background:#181c24;border-color:rgba(255,255,255,0.3)" onclick="setNoteColor('#181c24')"></button>
+        <button class="note-color-btn" data-color="#0a1f1a" style="background:#0a1f1a" onclick="setNoteColor('#0a1f1a')"></button>
+        <button class="note-color-btn" data-color="#0a1020" style="background:#0a1020" onclick="setNoteColor('#0a1020')"></button>
+        <button class="note-color-btn" data-color="#130d1f" style="background:#130d1f" onclick="setNoteColor('#130d1f')"></button>
+        <button class="note-color-btn" data-color="#1f0d0d" style="background:#1f0d0d" onclick="setNoteColor('#1f0d0d')"></button>
+        <button class="note-color-btn" data-color="#1a1608" style="background:#1a1608" onclick="setNoteColor('#1a1608')"></button>
+      </div>
+    </div>
+  </div>
+  <textarea class="note-editor-content" id="noteEditorContent" placeholder="Start writing your note..." oninput="noteAutoSave()"></textarea>
+</div>
+
+<!-- ══════════ MODALS ══════════ -->
+
+<!-- Task Update/Chat Modal -->
+<div class="modal-overlay" id="taskUpdateModal">
+  <div class="modal modal-lg">
+    <div class="modal-title">💬 Task Update & Chat</div>
+    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px" id="taskUpdateTitle"></div>
+      <div style="display:flex;gap:12px;font-size:13px;color:var(--muted)">
+        <span>👤 <span id="taskUpdateAssignee"></span></span>
+        <span>📅 <span id="taskUpdateDue"></span></span>
+      </div>
+    </div>
+    <!-- Status update -->
+    <div class="form-group">
+      <label class="form-label">Update Status</label>
+      <select class="form-control" id="taskUpdateStatus">
+        <option value="pending">⏳ Pending</option>
+        <option value="inprogress">🔄 In Progress</option>
+        <option value="review">👁 Ready for Review</option>
+        <option value="done">✅ Done</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Add Update Note</label>
+      <textarea class="form-control" id="taskUpdateNote" rows="2" placeholder="Write an update message..."></textarea>
+    </div>
+    <button class="btn-primary" style="margin-bottom:16px" onclick="saveTaskUpdate()">Save Update</button>
+    <div class="divider"></div>
+    <!-- Chat -->
+    <div style="font-size:14px;font-weight:600;margin-bottom:10px">💬 Task Chat</div>
+    <div class="task-chat-wrap" id="taskChatMessages"></div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="taskChatInput" placeholder="Message..." onkeydown="taskChatKeyDown(event)" rows="1"></textarea>
+      <button class="btn-send" onclick="sendTaskChat()">➤</button>
+    </div>
+    <div class="flex-end">
+      <button class="btn-secondary" onclick="closeModal('taskUpdateModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal">
+    <div class="modal-title">➕ Add New Client</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Client Name *</label>
+        <input type="text" class="form-control" id="cName" placeholder="Firm / Person name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Phone *</label>
+        <input type="tel" class="form-control" id="cPhone" placeholder="9XXXXXXXXX"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" id="cEmail" placeholder="optional"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Client Type</label>
+        <select class="form-control" id="cType">
+          <option value="retail">🛍 Retail</option>
+          <option value="agency">🏦 Agency</option>
+          <option value="corporate">🏢 Corporate</option>
+          <option value="service">🔧 Service</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">City</label>
+        <input type="text" class="form-control" id="cCity" placeholder="e.g. Indore"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-control" id="cAddress" placeholder="Full address"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-control" id="cNotes" rows="2" placeholder="Any special notes..."></textarea>
+    </div>
+    <div class="flex-end">
+      <button class="btn-secondary" onclick="closeModal('addClientModal')">Cancel</button>
+      <button class="btn-primary" onclick="addClient()">Add Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- Client Detail Modal -->
+<div class="modal-overlay" id="clientDetailModal">
+  <div class="modal modal-lg">
+    <div class="modal-title">🏢 <span id="cdName">Client</span></div>
+    <!-- Amount Summary -->
+    <div class="client-amount-row">
+      <div class="amount-card">
+        <div class="amount-label">Total Billed</div>
+        <div class="amount-value" id="cdTotalBilled" style="color:var(--leader)">₹0</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label">Total Paid</div>
+        <div class="amount-value" id="cdTotalPaid" style="color:var(--accent)">₹0</div>
+      </div>
+      <div class="amount-card">
+        <div class="amount-label">Outstanding</div>
+        <div class="amount-value" id="cdOutstanding" style="color:var(--accent3)">₹0</div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="clientTab(this,'info')">📋 Info</button>
+      <button class="modal-tab" onclick="clientTab(this,'orders')">📦 Orders</button>
+      <button class="modal-tab" onclick="clientTab(this,'payments')">💰 Payments</button>
+      <button class="modal-tab" onclick="clientTab(this,'contacts')">📞 Contacts</button>
+    </div>
+    <!-- Info Tab -->
+    <div class="modal-section active" id="tab-info">
+      <div class="client-detail-grid">
+        <div class="client-detail-item"><div class="client-detail-label">Phone</div><div class="client-detail-value" id="cdPhone"></div></div>
+        <div class="client-detail-item"><div class="client-detail-label">Email</div><div class="client-detail-value" id="cdEmail"></div></div>
+        <div class="client-detail-item"><div class="client-detail-label">City</div><div class="client-detail-value" id="cdCity"></div></div>
+        <div class="client-detail-item"><div class="client-detail-label">Type</div><div class="client-detail-value" id="cdType"></div></div>
+      </div>
+      <div class="client-detail-item" style="margin-bottom:10px"><div class="client-detail-label">Address</div><div class="client-detail-value" id="cdAddress"></div></div>
+      <div class="client-detail-item"><div class="client-detail-label">Notes</div><div class="client-detail-value" id="cdNotes"></div></div>
+    </div>
+    <!-- Orders Tab -->
+    <div class="modal-section" id="tab-orders">
+      <div class="form-row-3" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Order Description</label>
+          <input type="text" class="form-control" id="orderDesc" placeholder="e.g. HP Laptop 15s"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Amount (₹)</label>
+          <input type="number" class="form-control" id="orderAmount" placeholder="0"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="orderStatus">
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Order Date</label>
+        <input type="date" class="form-control" id="orderDate" style="max-width:200px"/>
+      </div>
+      <button class="btn-primary" onclick="addOrder()" style="margin-bottom:16px">Add Order</button>
+      <div id="clientOrdersList"></div>
+    </div>
+    <!-- Payments Tab -->
+    <div class="modal-section" id="tab-payments">
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Amount (₹)</label>
+          <input type="number" class="form-control" id="payAmount" placeholder="0"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Payment Mode</label>
+          <select class="form-control" id="payMode">
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="cheque">Cheque</option>
+            <option value="card">Card</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Reference / UTR</label>
+          <input type="text" class="form-control" id="payRef" placeholder="Optional"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Payment Date</label>
+          <input type="date" class="form-control" id="payDate"/>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="addPayment()" style="margin-bottom:16px">Record Payment</button>
+      <div id="clientPaymentsList"></div>
+    </div>
+    <!-- Contacts Tab -->
+    <div class="modal-section" id="tab-contacts">
+      <div class="form-row" style="margin-bottom:12px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Contact Name</label>
+          <input type="text" class="form-control" id="contactName" placeholder="Name"/>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Phone</label>
+          <input type="tel" class="form-control" id="contactPhone" placeholder="9XXXXXXXXX"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role / Designation</label>
+        <input type="text" class="form-control" id="contactRole" placeholder="e.g. Purchase Manager"/>
+      </div>
+      <button class="btn-primary" onclick="addContact()" style="margin-bottom:16px">Add Contact</button>
+      <div id="clientContactsList"></div>
+    </div>
+    <div class="flex-end">
+      <button class="btn-secondary" onclick="closeModal('clientDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Inline JS for tab switching (no module needed) -->
+<script>
+function setTaskFilter(el, filter) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if(window.renderAllTasksList) renderAllTasksList(filter);
+}
+function clientFilterTab(el, filter) {
+  document.querySelectorAll('#view-clients .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if(window.filterClients) filterClients(filter);
+}
+function noteFilterTab(el, filter) {
+  document.querySelectorAll('#view-notes .filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  if(window.setNoteFilter) setNoteFilter(filter);
+}
+function clientTab(el, tab) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.modal-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+</script>
+
+<!-- Firebase + App -->
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
