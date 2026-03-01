@@ -92,37 +92,79 @@ function emptyState(icon, text) {
 //  AUTH
 // ═══════════════════════════════════════════════════════
 
-// Handle redirect result on page load
+// ── Reset button on every page load (stuck state fix) ──
+function resetLoginBtn() {
+  const btn = document.getElementById('googleLoginBtn');
+  const txt = document.getElementById('googleBtnText');
+  if (btn) btn.disabled = false;
+  if (txt) txt.innerHTML = '<strong>Continue with Google</strong><br/><small style="font-weight:400;font-size:11px;color:#6b7280">Secure one-tap sign in</small>';
+}
+resetLoginBtn(); // call immediately on load
+
+// ── Handle redirect result FIRST (before anything else) ──
 getRedirectResult(auth).then(result => {
-  if (result?.user) console.log('Redirect login:', result.user.email);
+  if (result?.user) {
+    // onAuthStateChanged will handle initApp
+    console.log('✅ Redirect login success:', result.user.email);
+  } else {
+    // No redirect result — normal page load
+    resetLoginBtn();
+  }
 }).catch(e => {
-  if (e.code !== 'auth/no-auth-event' && e.code !== 'auth/null-user') {
-    console.warn('Redirect result:', e.code);
+  resetLoginBtn();
+  const ignoreCodes = ['auth/no-auth-event','auth/null-user','auth/missing-initial-state'];
+  if (!ignoreCodes.includes(e.code)) {
+    console.error('Redirect error:', e.code, e.message);
+    // Show error only if it's meaningful
+    if (e.code === 'auth/unauthorized-domain') {
+      showLoginError('Domain authorized nahi hai. Firebase Console → Authentication → Authorized Domains mein apna domain add karo.');
+    } else if (e.code !== 'auth/popup-closed-by-user') {
+      showLoginError('Login error: ' + e.code);
+    }
   }
 });
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginErrorMsg');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  else toast(msg, true);
+  resetLoginBtn();
+}
 
 window.loginWithGoogle = async () => {
   const btn = document.getElementById('googleLoginBtn');
   const txt = document.getElementById('googleBtnText');
-  if (btn) { btn.disabled = true; }
+  const errEl = document.getElementById('loginErrorMsg');
+  if (errEl) errEl.style.display = 'none';
+
+  if (btn) btn.disabled = true;
   if (txt) txt.innerHTML = '<strong>Signing in...</strong><br/><small style="color:#6b7280">Please wait...</small>';
+
   try {
+    // Try popup first
     await signInWithPopup(auth, provider);
-    // onAuthStateChanged will handle the rest
+    // Success handled by onAuthStateChanged
   } catch(e) {
+    console.log('Popup error:', e.code);
     if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code)) {
-      if (txt) txt.innerHTML = '<strong>Redirecting...</strong><br/><small style="color:#6b7280">Opening Google sign in...</small>';
-      try {
-        await signInWithRedirect(auth, provider);
-        return; // page will reload
-      } catch(e2) {
-        toast('Login failed: ' + e2.message, true);
+      if (e.code !== 'auth/popup-closed-by-user') {
+        // Popup was blocked — use redirect
+        if (txt) txt.innerHTML = '<strong>Redirecting to Google...</strong><br/><small style="color:#6b7280">Please wait, do not refresh</small>';
+        try {
+          await signInWithRedirect(auth, provider);
+          return; // Page will reload after Google auth
+        } catch(e2) {
+          showLoginError('Redirect failed: ' + e2.message);
+        }
+      } else {
+        // User closed popup — just reset
+        resetLoginBtn();
       }
-    } else if (e.code !== 'auth/popup-closed-by-user') {
-      toast('Login failed: ' + e.message, true);
+    } else if (e.code === 'auth/unauthorized-domain') {
+      showLoginError('❌ Domain unauthorized! Firebase Console → Authentication → Authorized Domains mein apna domain add karo.');
+    } else {
+      showLoginError('Login failed: ' + (e.message || e.code));
     }
-    if (btn) { btn.disabled = false; }
-    if (txt) txt.innerHTML = '<strong>Continue with Google</strong><br/><small style="font-weight:400;font-size:11px;color:#6b7280">Secure one-tap sign in</small>';
   }
 };
 
@@ -134,13 +176,34 @@ window.logout = async () => {
 
 onAuthStateChanged(auth, async user => {
   if (user) {
+    console.log('✅ Auth user:', user.email);
     currentUser = user;
-    currentRole = await resolveRole(user);
-    currentTeamId = await resolveTeam(user);
-    await registerUser(user);
-    initApp();
+    try {
+      // Add timeout protection for DB reads
+      const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+      currentRole  = await Promise.race([resolveRole(user),  timeout(5000)]).catch(() => {
+        console.warn('resolveRole timeout — using MEMBER default');
+        return user.email === ADMIN_EMAIL ? ROLES.ADMIN : ROLES.MEMBER;
+      });
+      currentTeamId = await Promise.race([resolveTeam(user), timeout(5000)]).catch(() => {
+        console.warn('resolveTeam timeout — using null');
+        return null;
+      });
+      await Promise.race([registerUser(user), timeout(5000)]).catch(e => console.warn('registerUser failed:', e));
+    } catch(e) {
+      console.error('Pre-init error:', e);
+      // Still try to init with defaults
+      if (user.email === ADMIN_EMAIL) currentRole = ROLES.ADMIN;
+    }
+    try {
+      initApp();
+    } catch(e) {
+      console.error('initApp error:', e);
+      showLoginError('App load failed: ' + e.message + '. Please refresh.');
+    }
   } else {
     showScreen('login');
+    resetLoginBtn();
   }
 });
 
@@ -148,8 +211,14 @@ async function resolveRole(user) {
   if (user.email === ADMIN_EMAIL) return ROLES.ADMIN;
   try {
     const snap = await get(ref(db, `roles/${safeKey(user.email)}`));
-    if (snap.exists()) return snap.val().role || ROLES.MEMBER;
-  } catch(e) {}
+    if (snap.exists()) {
+      const role = snap.val().role;
+      console.log('Role from DB:', role);
+      return role || ROLES.MEMBER;
+    }
+  } catch(e) {
+    console.warn('resolveRole DB error:', e.code || e.message);
+  }
   return ROLES.MEMBER;
 }
 
@@ -164,7 +233,10 @@ async function resolveTeam(user) {
       if (t.members?.[safeKey(user.email)]) teamId = child.key;
     });
     return teamId;
-  } catch(e) { return null; }
+  } catch(e) {
+    console.warn('resolveTeam DB error:', e.code || e.message);
+    return null;
+  }
 }
 
 async function registerUser(user) {
@@ -182,33 +254,38 @@ async function registerUser(user) {
 // ═══════════════════════════════════════════════════════
 
 function initApp() {
+  console.log('🚀 initApp — role:', currentRole, 'team:', currentTeamId);
   showScreen('app');
   setupSidebar();
-  if (Notification.permission === 'default') Notification.requestPermission();
+  if (Notification.permission === 'default') Notification.requestPermission().catch(()=>{});
+
+  const adminNav  = document.getElementById('adminNav');
+  const leaderNav = document.getElementById('leaderNav');
+  const memberNav = document.getElementById('memberNav');
+  const roleEl    = document.getElementById('sidebarRole');
 
   if (currentRole === ROLES.ADMIN) {
-    document.getElementById('adminNav').style.display = 'block';
-    document.getElementById('leaderNav').style.display = 'block';
-    document.getElementById('sidebarRole').textContent = '⚡ Admin';
-    document.getElementById('sidebarRole').classList.add('admin');
+    if (adminNav)  adminNav.style.display  = 'block';
+    if (leaderNav) leaderNav.style.display = 'block';
+    if (roleEl) { roleEl.textContent = '⚡ Admin'; roleEl.classList.add('admin'); }
     initLeaderModules();
     initAdminModule();
     showView('dashboard');
   } else if (currentRole === ROLES.LEADER) {
-    document.getElementById('leaderNav').style.display = 'block';
-    document.getElementById('sidebarRole').textContent = '👑 Leader';
+    if (leaderNav) leaderNav.style.display = 'block';
+    if (roleEl) roleEl.textContent = '👑 Leader';
     initLeaderModules();
     showView('dashboard');
   } else {
-    document.getElementById('memberNav').style.display = 'block';
-    document.getElementById('sidebarRole').textContent = '🧑‍💼 Staff';
-    document.getElementById('sidebarRole').classList.add('member');
+    if (memberNav) memberNav.style.display = 'block';
+    if (roleEl) { roleEl.textContent = '🧑‍💼 Staff'; roleEl.classList.add('member'); }
     initMemberModules();
     showView('my-tasks');
   }
 
   initAIFloat();
   setInterval(checkReminders, 60000);
+  console.log('✅ App initialized successfully');
 }
 
 function setupSidebar() {
