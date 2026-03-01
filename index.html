@@ -3,65 +3,660 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Turning Point Solution — Client Desk</title>
+<title>Turning Point Solution — Client Desk AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="css/styles.css"/>
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181c24;
+  --border: rgba(255,255,255,0.07);
+  --accent: #00e5a0;
+  --accent2: #0099ff;
+  --accent3: #ff6b6b;
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --leader: #ffd166;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUNDS ── */
+.bg-mesh {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(0,229,160,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,153,255,0.08) 0%, transparent 60%);
+}
+
+/* ── SCREENS ── */
+.screen { display:none; min-height:100vh; position:relative; z-index:1; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* ── LOGIN SCREEN ── */
+#screen-login {
+  flex-direction: row;
+  min-height: 100vh;
+}
+
+/* LEFT PANEL */
+.login-left {
+  flex: 1;
+  background: linear-gradient(145deg, #0a0f1e 0%, #0d1a2e 40%, #061428 100%);
+  display: flex; flex-direction: column;
+  justify-content: center; padding: 60px 56px;
+  position: relative; overflow: hidden;
+}
+.login-left::before {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 20% 20%, rgba(0,229,160,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(0,153,255,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 60% 10%, rgba(255,107,107,0.06) 0%, transparent 50%);
+  pointer-events:none;
+}
+.login-left-brand {
+  display:flex; align-items:center; gap:14px; margin-bottom:56px; position:relative;z-index:1;
+}
+.login-left-logo {
+  width:52px; height:52px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px;
+  box-shadow: 0 8px 32px rgba(0,229,160,0.35);
+}
+.login-left-title {
+  font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text);
+}
+.login-left-tagline { font-size:12px; color:var(--muted); }
+.login-hero { position:relative; z-index:1; margin-bottom:48px; }
+.login-hero h1 {
+  font-family:'Syne',sans-serif;
+  font-size: clamp(32px,4vw,48px);
+  font-weight:800; line-height:1.15;
+  color:#fff; margin-bottom:16px;
+}
+.login-hero h1 span { color: var(--accent); }
+.login-hero p { color:#8b9ab5; font-size:16px; line-height:1.7; max-width:440px; }
+.login-features { position:relative; z-index:1; display:flex; flex-direction:column; gap:18px; }
+.login-feature {
+  display:flex; align-items:flex-start; gap:16px;
+}
+.login-feature-icon {
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+}
+.lfi-green { background:rgba(0,229,160,0.15); }
+.lfi-blue  { background:rgba(0,153,255,0.15); }
+.lfi-orange{ background:rgba(255,153,0,0.15); }
+.lfi-pink  { background:rgba(255,107,107,0.15); }
+.lfi-purple{ background:rgba(139,92,246,0.15); }
+.login-feature-text h4 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:3px; }
+.login-feature-text p  { font-size:12px; color:#6b7280; line-height:1.5; }
+.login-left-footer { margin-top:auto; padding-top:48px; position:relative; z-index:1; }
+.login-stat-row { display:flex; gap:32px; }
+.login-stat h3 { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:var(--accent); }
+.login-stat p  { font-size:11px; color:var(--muted); margin-top:2px; }
+
+/* RIGHT PANEL */
+.login-right {
+  width:480px; flex-shrink:0;
+  background: #f5f7fa;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:60px 48px;
+  position:relative;
+}
+.login-right::before {
+  content:''; position:absolute; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,229,160,0.05) 0%, transparent 60%);
+  pointer-events:none;
+}
+.login-right-inner { width:100%; max-width:360px; position:relative; z-index:1; }
+.login-right-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(0,180,120,0.12); color:#00b478;
+  border:1px solid rgba(0,180,120,0.25);
+  border-radius:20px; padding:4px 12px;
+  font-size:11px; font-weight:600; letter-spacing:0.5px;
+  text-transform:uppercase; margin-bottom:24px;
+}
+.login-right-badge::before { content:'●'; font-size:8px; }
+.login-right h2 {
+  font-family:'Syne',sans-serif;
+  font-size:32px; font-weight:800;
+  color:#111827; margin-bottom:8px; line-height:1.2;
+}
+.login-right-sub { color:#6b7280; font-size:14px; margin-bottom:36px; }
+.btn-google {
+  width: 100%; padding: 18px 24px;
+  background: #fff; color: #111827;
+  border: 2px solid #e5e7eb; border-radius: 14px;
+  font-family:'DM Sans',sans-serif; font-size:15px; font-weight:600;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:14px;
+  transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  position:relative;
+}
+.btn-google:hover { border-color:#00e5a0; box-shadow:0 8px 24px rgba(0,229,160,0.2); transform:translateY(-1px); }
+.btn-google-arrow { margin-left:auto; color:#9ca3af; font-size:18px; }
+.login-divider { display:flex; align-items:center; gap:12px; margin:24px 0; }
+.login-divider::before,.login-divider::after { content:''; flex:1; height:1px; background:#e5e7eb; }
+.login-divider span { font-size:11px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; }
+.login-trust-badges { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+.login-trust-badge {
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+  padding:14px 10px; text-align:center;
+  box-shadow:0 1px 4px rgba(0,0,0,0.04);
+}
+.login-trust-badge .tb-icon { font-size:24px; margin-bottom:6px; }
+.login-trust-badge h5 { font-size:12px; font-weight:700; color:#111827; margin-bottom:2px; }
+.login-trust-badge p  { font-size:10px; color:#9ca3af; }
+.login-right-note { display:flex; align-items:center; gap:6px; margin-top:20px; }
+.login-right-note span { font-size:12px; color:#6b7280; }
+.login-powered { text-align:center; margin-top:32px; font-size:12px; color:#9ca3af; }
+.login-powered strong { color:#111827; }
+
+/* Mobile login */
+@media(max-width:900px) {
+  #screen-login { flex-direction:column; }
+  .login-left { padding:40px 32px; }
+  .login-right { width:100%; padding:40px 28px; }
+  .login-stat-row { display:none; }
+}
+
+/* ── MAIN LAYOUT ── */
+#screen-app { flex-direction: row; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px; min-height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 24px 0;
+  flex-shrink: 0;
+}
+.sidebar-brand {
+  padding: 0 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+.sidebar-brand .logo { font-family:'Syne',sans-serif; font-weight:800; font-size:16px; color:var(--accent); }
+.sidebar-brand .sub { font-size:11px; color:var(--muted); }
+
+.sidebar-user {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items:center; gap:10px;
+}
+.user-avatar {
+  width:36px; height:36px; border-radius:50%; border:2px solid var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; overflow:hidden; flex-shrink:0;
+}
+.user-avatar img { width:100%; height:100%; object-fit:cover; }
+.user-info { overflow:hidden; }
+.user-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.user-role {
+  font-size:10px; padding: 2px 8px; border-radius:20px;
+  background: rgba(0,229,160,0.15); color:var(--accent);
+  display:inline-block; margin-top:2px;
+}
+.user-role.member { background:rgba(0,153,255,0.15); color:var(--accent2); }
+
+.nav-section { padding: 16px 12px 4px; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.nav-item {
+  margin: 2px 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex; align-items:center; gap:10px;
+  font-size: 14px; color: var(--muted);
+  transition: all 0.2s;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: rgba(0,229,160,0.12); color: var(--accent); }
+.nav-item .icon { font-size:16px; width:20px; text-align:center; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--accent3);
+  color:#fff; font-size:10px; font-weight:700;
+  min-width:18px; height:18px; border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  padding:0 4px;
+}
+
+.sidebar-footer {
+  margin-top:auto;
+  padding: 16px 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+/* MAIN CONTENT */
+.main-content {
+  flex: 1; overflow-y: auto;
+  padding: 32px;
+  background: var(--bg);
+}
+
+/* VIEWS */
+.view { display:none; animation: fadeIn 0.3s ease; }
+.view.active { display:block; }
+
+/* PAGE HEADER */
+.page-header { margin-bottom: 28px; }
+.page-title {
+  font-family:'Syne',sans-serif; font-size:26px; font-weight:700;
+}
+.page-title span { color:var(--accent); }
+.page-sub { color:var(--muted); font-size:14px; margin-top:4px; }
+
+/* STATS ROW */
+.stats-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:16px; margin-bottom:28px; }
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+}
+.stat-label { font-size:12px; color:var(--muted); margin-bottom:8px; }
+.stat-value { font-family:'Syne',sans-serif; font-size:28px; font-weight:700; }
+.stat-value.green { color:var(--accent); }
+.stat-value.blue { color:var(--accent2); }
+.stat-value.red { color:var(--accent3); }
+.stat-value.yellow { color:var(--leader); }
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:20px;
+}
+.card-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; }
+
+/* TASK CARDS */
+.task-list { display:flex; flex-direction:column; gap:12px; }
+.task-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display:flex; align-items:flex-start; gap:14px;
+  transition: border-color 0.2s;
+  position:relative;
+}
+.task-item:hover { border-color: rgba(0,229,160,0.3); }
+.task-checkbox {
+  width:20px; height:20px; border-radius:6px;
+  border: 2px solid var(--muted);
+  cursor:pointer; flex-shrink:0; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s;
+}
+.task-checkbox.done { background:var(--accent); border-color:var(--accent); }
+.task-checkbox.done::after { content:'✓'; color:#000; font-size:12px; font-weight:700; }
+.task-body { flex:1; }
+.task-title { font-size:14px; font-weight:500; margin-bottom:4px; }
+.task-title.done { text-decoration:line-through; color:var(--muted); }
+.task-meta { display:flex; gap:8px; flex-wrap:wrap; }
+.tag {
+  font-size:11px; padding:2px 8px; border-radius:20px;
+  background:rgba(255,255,255,0.06); color:var(--muted);
+}
+.tag.priority-high { background:rgba(255,107,107,0.15); color:var(--accent3); }
+.tag.priority-medium { background:rgba(255,209,102,0.15); color:var(--leader); }
+.tag.priority-low { background:rgba(0,229,160,0.12); color:var(--accent); }
+.tag.status-done { background:rgba(0,229,160,0.12); color:var(--accent); }
+.tag.status-inprogress { background:rgba(0,153,255,0.12); color:var(--accent2); }
+.task-actions { display:flex; gap:6px; }
+.btn-sm {
+  padding:6px 12px; border-radius:8px; font-size:12px;
+  cursor:pointer; border:none; font-family:'DM Sans',sans-serif;
+  transition:all 0.2s;
+}
+.btn-done { background:rgba(0,229,160,0.15); color:var(--accent); }
+.btn-done:hover { background:rgba(0,229,160,0.25); }
+.btn-del { background:rgba(255,107,107,0.12); color:var(--accent3); }
+.btn-del:hover { background:rgba(255,107,107,0.22); }
+
+/* FORMS */
+.form-group { margin-bottom:16px; }
+.form-label { font-size:12px; color:var(--muted); margin-bottom:6px; display:block; text-transform:uppercase; letter-spacing:0.5px; }
+.form-control {
+  width:100%; padding:12px 14px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:10px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:14px;
+  transition:border-color 0.2s; outline:none;
+}
+.form-control:focus { border-color:var(--accent); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.btn-primary {
+  padding:12px 24px; border-radius:10px;
+  background:linear-gradient(135deg, var(--accent), #00c87a);
+  color:#000; border:none; font-weight:700; font-size:14px;
+  cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all 0.2s;
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(0,229,160,0.3); }
+.btn-secondary {
+  padding:12px 24px; border-radius:10px;
+  background:var(--surface2); color:var(--text);
+  border:1px solid var(--border); font-size:14px;
+  cursor:pointer; font-family:'DM Sans',sans-serif;
+  transition:all 0.2s;
+}
+.btn-secondary:hover { border-color:var(--accent); color:var(--accent); }
+
+/* AI CHATBOT */
+.chat-container {
+  display:flex; flex-direction:column;
+  height: calc(100vh - 200px); min-height:500px;
+}
+.chat-messages {
+  flex:1; overflow-y:auto; padding:16px;
+  display:flex; flex-direction:column; gap:12px;
+  background:var(--surface2); border-radius:12px; margin-bottom:14px;
+}
+.chat-msg {
+  display:flex; gap:10px; animation:msgIn 0.3s ease;
+}
+.chat-msg.user { flex-direction:row-reverse; }
+.msg-avatar {
+  width:32px; height:32px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; flex-shrink:0;
+}
+.chat-msg.user .msg-avatar { background:linear-gradient(135deg,var(--accent2),#5d3fd3); }
+.msg-bubble {
+  max-width:75%; padding:12px 16px; border-radius:14px;
+  font-size:14px; line-height:1.6;
+  background:var(--surface); border:1px solid var(--border);
+}
+.chat-msg.user .msg-bubble {
+  background:rgba(0,153,255,0.15); border-color:rgba(0,153,255,0.3);
+}
+.msg-bubble strong { color:var(--accent); }
+.msg-bubble ul { margin:8px 0 0 16px; }
+.msg-bubble li { margin:4px 0; }
+
+.chat-input-row {
+  display:flex; gap:10px;
+}
+.chat-input {
+  flex:1; padding:14px 16px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; color:var(--text);
+  font-family:'DM Sans',sans-serif; font-size:14px; outline:none;
+  resize:none; height:52px;
+}
+.chat-input:focus { border-color:var(--accent); }
+.btn-send {
+  padding:14px 20px; border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),#00c87a);
+  border:none; color:#000; font-size:18px;
+  cursor:pointer; transition:all 0.2s;
+}
+.btn-send:hover { transform:scale(1.05); }
+.typing-indicator { display:flex; gap:4px; padding:4px 0; }
+.typing-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--accent); animation:pulse 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay:0.2s; }
+.typing-dot:nth-child(3) { animation-delay:0.4s; }
+
+/* REMINDER */
+.reminder-item {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:12px; padding:16px;
+  display:flex; align-items:center; gap:14px;
+  margin-bottom:10px;
+}
+.reminder-icon {
+  width:40px; height:40px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; flex-shrink:0;
+}
+.reminder-icon.pending { background:rgba(255,209,102,0.15); }
+.reminder-icon.overdue { background:rgba(255,107,107,0.15); }
+.reminder-icon.done { background:rgba(0,229,160,0.12); }
+.reminder-body { flex:1; }
+.reminder-title { font-size:14px; font-weight:500; }
+.reminder-time { font-size:12px; color:var(--muted); margin-top:2px; }
+.reminder-time.overdue { color:var(--accent3); }
+
+/* MEMBER LIST */
+.member-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px; }
+.member-card {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:14px; padding:20px; text-align:center;
+}
+.member-avatar-lg {
+  width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg,var(--accent2),#5d3fd3);
+  margin:0 auto 12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; font-weight:700; overflow:hidden;
+}
+.member-avatar-lg img { width:100%; height:100%; object-fit:cover; }
+.member-name { font-weight:600; font-size:14px; }
+.member-email { font-size:11px; color:var(--muted); margin:2px 0 10px; }
+.member-stats { display:flex; justify-content:center; gap:16px; }
+.mstat { text-align:center; }
+.mstat-val { font-family:'Syne',sans-serif; font-weight:700; font-size:16px; }
+.mstat-label { font-size:10px; color:var(--muted); }
+
+/* PROGRESS BAR */
+.progress-bar-wrap { background:rgba(255,255,255,0.06); border-radius:4px; height:6px; margin-top:8px; }
+.progress-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width 0.5s ease; }
+
+/* NOTES */
+.notes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; }
+.note-card {
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:14px; padding:20px;
+  position:relative; overflow:hidden;
+}
+.note-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+.note-content { font-size:13px; line-height:1.7; color:var(--muted); margin-bottom:12px; }
+.note-date { font-size:11px; color:var(--muted); }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; z-index:100;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
+  display:none; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:20px; padding:32px; width:90%; max-width:480px;
+  animation:slideUp 0.3s ease;
+}
+.modal-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:20px; }
+
+/* TOAST */
+.toast-container { position:fixed; top:20px; right:20px; z-index:200; display:flex; flex-direction:column; gap:8px; }
+.toast {
+  background:var(--surface); border:1px solid var(--accent);
+  border-radius:10px; padding:12px 20px;
+  font-size:13px; color:var(--text);
+  animation:toastIn 0.3s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.toast.error { border-color:var(--accent3); }
+
+/* EMPTY STATE */
+.empty-state {
+  text-align:center; padding:48px; color:var(--muted);
+}
+.empty-icon { font-size:48px; margin-bottom:12px; }
+.empty-text { font-size:14px; }
+
+/* ANIMATIONS */
+@keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes msgIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+@keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+/* RESPONSIVE */
+@media(max-width:768px) {
+  .sidebar { display:none; }
+  .main-content { padding:16px; }
+  .form-row { grid-template-columns:1fr; }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:2px; }
+
+select.form-control option { background:#1a1d24; }
+
+.flex-end { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.divider { height:1px; background:var(--border); margin:20px 0; }
+</style>
 </head>
 <body>
 <div class="bg-mesh"></div>
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ══════════ PIN OVERLAYS ══════════ -->
-<!-- AI PIN Setup -->
-<div class="pin-overlay" id="aiPinSetupPanel" style="display:none">
-  <div class="pin-card">
-    <div style="font-size:40px;margin-bottom:12px">🦊</div>
-    <div class="pin-title">AI Assistant PIN Setup</div>
-    <div class="pin-sub">Pehli baar: Apna AI PIN set karo.<br/>Yeh PIN AI assistant access ke liye use hoga.</div>
-    <input type="password" class="pin-input" id="aiPinInput" maxlength="8" placeholder="••••" onkeydown="setupPinKeyDown(event)"/>
-    <input type="password" class="pin-input" id="aiPinConfirm" maxlength="8" placeholder="Confirm PIN" onkeydown="setupPinKeyDown(event)"/>
-    <button class="btn-primary" style="width:100%" onclick="setupAIPIN()">Set PIN & Open AI</button>
-    <div style="font-size:12px;color:var(--muted);margin-top:12px">PIN yaad rakhna — reset sirf settings se hoga</div>
-  </div>
-</div>
-
-<!-- AI PIN Verify -->
-<div class="pin-overlay" id="aiPinVerifyPanel" style="display:none">
-  <div class="pin-card">
-    <div style="font-size:40px;margin-bottom:12px">🔐</div>
-    <div class="pin-title">AI Assistant</div>
-    <div class="pin-sub">AI access ke liye PIN enter karo</div>
-    <input type="password" class="pin-input" id="aiPinVerifyInput" maxlength="8" placeholder="••••" onkeydown="aiPinKeyDown(event)" autofocus/>
-    <button class="btn-primary" style="width:100%;margin-bottom:10px" onclick="verifyAIPIN()">Open AI</button>
-    <button class="btn-secondary" style="width:100%;font-size:13px" onclick="document.getElementById('aiPinVerifyPanel').style.display='none'">Cancel</button>
-    <div style="font-size:12px;color:var(--muted);margin-top:12px;cursor:pointer" onclick="resetAIPIN()">🔄 Reset PIN</div>
-  </div>
-</div>
-
 <!-- ══════════ LOGIN SCREEN ══════════ -->
 <div id="screen-login" class="screen active">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh">
-    <div class="login-card">
-      <div class="brand-logo">🎯</div>
-      <div class="brand-name">Turning Point Solution</div>
-      <div class="brand-sub">Client Desk — Smart Team Management</div>
+  <!-- LEFT PANEL -->
+  <div class="login-left">
+    <div class="login-left-brand">
+      <div class="login-left-logo">🎯</div>
+      <div>
+        <div class="login-left-title">Turning Point Solution</div>
+        <div class="login-left-tagline">Client Desk AI</div>
+      </div>
+    </div>
+    <div class="login-hero">
+      <h1>Smart <span>Team</span><br/>Management</h1>
+      <p>Hardware, Software, Sales &amp; Service — apni poori team aur clients ko ek jagah manage karo. AI se boliye, kaam automatic hoga.</p>
+    </div>
+    <div class="login-features">
+      <div class="login-feature">
+        <div class="login-feature-icon lfi-green">📋</div>
+        <div class="login-feature-text">
+          <h4>Task &amp; Job Management</h4>
+          <p>Field staff, service team aur office members ke tasks assign aur track karo</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon lfi-blue">👥</div>
+        <div class="login-feature-text">
+          <h4>Client &amp; Payment Records</h4>
+          <p>Multiple agency clients, contacts, payment history aur orders ek jagah</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon lfi-orange">🔔</div>
+        <div class="login-feature-text">
+          <h4>Smart Reminders &amp; Alerts</h4>
+          <p>Due dates, follow-ups aur overdue alerts automatically</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon lfi-pink">🤖</div>
+        <div class="login-feature-text">
+          <h4>GPT-4.1 AI Assistant</h4>
+          <p>Hindi, English, Hinglish — kisi bhi language mein commands do</p>
+        </div>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon lfi-purple">📝</div>
+        <div class="login-feature-text">
+          <h4>Smart Notes &amp; Chat</h4>
+          <p>Notebook-style notes aur task-level team chatting</p>
+        </div>
+      </div>
+    </div>
+    <div class="login-left-footer">
+      <div class="login-stat-row">
+        <div class="login-stat"><h3>∞</h3><p>Clients Track</p></div>
+        <div class="login-stat"><h3>AI</h3><p>Powered</p></div>
+        <div class="login-stat"><h3>24/7</h3><p>Cloud Sync</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="login-right">
+    <div class="login-right-inner">
+      <div class="login-right-badge">Ready to Connect</div>
+      <h2>Welcome back</h2>
+      <p class="login-right-sub">Sign in to access your AI-powered dashboard</p>
+
       <button class="btn-google" onclick="loginWithGoogle()">
-        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        Continue with Google
+        <svg width="22" height="22" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span>
+          <strong>Continue with Google</strong><br/>
+          <small style="font-weight:400;font-size:11px;color:#6b7280">Secure one-tap sign in</small>
+        </span>
+        <span class="btn-google-arrow">›</span>
       </button>
-      <p class="powered-by">Powered by <span>Wisefox Solution</span></p>
+
+      <div class="login-divider"><span>Trusted &amp; Secure</span></div>
+
+      <div class="login-trust-badges">
+        <div class="login-trust-badge">
+          <div class="tb-icon">🔐</div>
+          <h5>Encrypted</h5>
+          <p>256-bit SSL</p>
+        </div>
+        <div class="login-trust-badge">
+          <div class="tb-icon">☁️</div>
+          <h5>Cloud Sync</h5>
+          <p>Real-time</p>
+        </div>
+        <div class="login-trust-badge">
+          <div class="tb-icon">🤖</div>
+          <h5>AI Powered</h5>
+          <p>GPT-4.1</p>
+        </div>
+      </div>
+
+      <div class="login-right-note">
+        <span style="color:#00b478;font-size:16px">✓</span>
+        <span>Your data never leaves your account</span>
+      </div>
+
+      <div class="login-powered">Powered by <strong>Wisefox Solution</strong></div>
     </div>
   </div>
 </div>
 
 <!-- ══════════ MAIN APP ══════════ -->
 <div id="screen-app" class="screen">
-
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
       <div class="logo">🎯 TPS</div>
-      <div class="sub">Client Desk</div>
+      <div class="sub">Client Desk AI</div>
     </div>
     <div class="sidebar-user">
       <div class="user-avatar" id="sidebarAvatar"></div>
@@ -71,57 +666,45 @@
       </div>
     </div>
 
-    <!-- ADMIN NAV (only admin) -->
-    <div id="adminNav" style="display:none">
-      <div class="nav-section">Admin Panel</div>
-      <div class="nav-item" data-view="admin" onclick="showView('admin')">
-        <span class="icon">⚡</span> Admin Panel
-      </div>
-    </div>
-
-    <!-- LEADER/ADMIN NAV -->
+    <!-- LEADER MENU -->
     <div id="leaderNav" style="display:none">
-      <div class="nav-section">Management</div>
-      <div class="nav-item" data-view="dashboard" onclick="showView('dashboard')">
+      <div class="nav-section">Leader Panel</div>
+      <div class="nav-item active" onclick="showView('dashboard')">
         <span class="icon">📊</span> Dashboard
       </div>
-      <div class="nav-item" data-view="assign-task" onclick="showView('assign-task')">
+      <div class="nav-item" onclick="showView('ai-chat')">
+        <span class="icon">🤖</span> AI Assistant
+      </div>
+      <div class="nav-item" onclick="showView('assign-task')">
         <span class="icon">📋</span> Assign Task
       </div>
-      <div class="nav-item" data-view="all-tasks" onclick="showView('all-tasks')">
+      <div class="nav-item" onclick="showView('all-tasks')">
         <span class="icon">✅</span> All Tasks
-        <span class="nav-badge" id="taskBadge">0</span>
       </div>
-      <div class="nav-item" data-view="clients" onclick="showView('clients')">
-        <span class="icon">🏢</span> Clients
+      <div class="nav-item" onclick="showView('reminders')">
+        <span class="icon">🔔</span> Reminders <span class="nav-badge" id="reminderBadge">0</span>
       </div>
-      <div class="nav-item" data-view="reminders" onclick="showView('reminders')">
-        <span class="icon">🔔</span> Reminders
-        <span class="nav-badge" id="reminderBadge">0</span>
-      </div>
-      <div class="nav-item" data-view="members" onclick="showView('members')">
+      <div class="nav-item" onclick="showView('members')">
         <span class="icon">👥</span> Team Members
       </div>
-      <div class="nav-item" data-view="notes" onclick="showView('notes')">
-        <span class="icon">📓</span> Notebook
+      <div class="nav-item" onclick="showView('notes')">
+        <span class="icon">📝</span> My Notes
       </div>
-      <div class="nav-item" data-view="settings" onclick="showView('settings')">
+      <div class="nav-item" onclick="showView('settings')">
         <span class="icon">⚙️</span> Settings
       </div>
     </div>
 
-    <!-- MEMBER NAV (staff only) -->
+    <!-- MEMBER MENU -->
     <div id="memberNav" style="display:none">
       <div class="nav-section">My Workspace</div>
-      <div class="nav-item active" data-view="my-tasks" onclick="showView('my-tasks')">
-        <span class="icon">📋</span> My Tasks
-        <span class="nav-badge" id="myTaskBadge">0</span>
+      <div class="nav-item active" onclick="showView('my-tasks')">
+        <span class="icon">📋</span> My Tasks <span class="nav-badge" id="myTaskBadge">0</span>
       </div>
-      <div class="nav-item" data-view="my-reminders" onclick="showView('my-reminders')">
-        <span class="icon">🔔</span> Reminders
-        <span class="nav-badge" id="myReminderBadge">0</span>
+      <div class="nav-item" onclick="showView('my-reminders')">
+        <span class="icon">🔔</span> Reminders <span class="nav-badge" id="myReminderBadge">0</span>
       </div>
-      <div class="nav-item" data-view="my-progress" onclick="showView('my-progress')">
+      <div class="nav-item" onclick="showView('my-progress')">
         <span class="icon">📈</span> My Progress
       </div>
     </div>
@@ -136,187 +719,168 @@
   <!-- MAIN CONTENT -->
   <main class="main-content">
 
-    <!-- ═══ ADMIN: Admin Panel ═══ -->
-    <div id="view-admin" class="view">
-      <div class="page-header">
-        <div class="page-title">⚡ Admin <span>Panel</span></div>
-        <div class="page-sub">Manage teams, leaders and members — nil000nilesh@gmail.com</div>
-      </div>
-      <div class="grid-2">
-        <!-- Create Team -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">🏢 Create New Team</div></div>
-          <div class="form-group">
-            <label class="form-label">Team Name</label>
-            <input type="text" class="form-control" id="newTeamName" placeholder="e.g. Sales Team, Service Team"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Leader Email</label>
-            <input type="email" class="form-control" id="newTeamLeader" placeholder="leader@gmail.com"/>
-          </div>
-          <button class="btn-primary" onclick="adminCreateTeam()">Create Team & Assign Leader</button>
-        </div>
-        <!-- Add Member to Team -->
-        <div class="card">
-          <div class="card-header"><div class="card-title">➕ Add Member to Team</div></div>
-          <div class="form-group">
-            <label class="form-label">Member Email</label>
-            <input type="email" class="form-control" id="newMemberEmailAdmin" placeholder="member@gmail.com"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Select Team</label>
-            <select class="form-control" id="memberTeamSelect"><option value="">Loading...</option></select>
-          </div>
-          <button class="btn-primary" onclick="adminAddMember()">Add to Team</button>
-        </div>
-      </div>
-      <!-- Teams List -->
-      <div class="card">
-        <div class="card-header"><div class="card-title">🏢 All Teams</div></div>
-        <div id="adminTeamList">Loading...</div>
-      </div>
-      <!-- All Users -->
-      <div class="card">
-        <div class="card-header"><div class="card-title">👥 All Users & Roles</div></div>
-        <div id="adminUserList">Loading...</div>
-      </div>
-    </div>
-
-    <!-- ═══ LEADER: DASHBOARD ═══ -->
+    <!-- ── LEADER: DASHBOARD ── -->
     <div id="view-dashboard" class="view active">
       <div class="page-header">
         <div class="page-title">Good day, <span id="dashName">Leader</span> 👋</div>
-        <div class="page-sub">Team overview — Turning Point Solution</div>
+        <div class="page-sub">Here's your team overview for today</div>
       </div>
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="statTotal">0</div></div>
-        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="statDone">0</div></div>
-        <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value yellow" id="statProgress">0</div></div>
-        <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value red" id="statOverdue">0</div></div>
-        <div class="stat-card"><div class="stat-label">Clients</div><div class="stat-value blue" id="statClients">0</div></div>
-        <div class="stat-card"><div class="stat-label">Team Members</div><div class="stat-value purple" id="statMembers">0</div></div>
-      </div>
-      <div style="margin-bottom:18px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px">
-          <span>Completion Rate</span><span id="dashCompletionRate" style="color:var(--accent)">0%</span>
+        <div class="stat-card">
+          <div class="stat-label">Total Tasks</div>
+          <div class="stat-value blue" id="statTotal">0</div>
         </div>
-        <div class="progress-lg-wrap"><div class="progress-lg-fill" id="dashCompletionFill" style="width:0%"></div></div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value green" id="statDone">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">In Progress</div>
+          <div class="stat-value yellow" id="statProgress">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Overdue</div>
+          <div class="stat-value red" id="statOverdue">0</div>
+        </div>
       </div>
-      <div class="grid-2">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div class="card">
           <div class="card-header">
             <div class="card-title">Recent Tasks</div>
             <button class="btn-sm btn-done" onclick="showView('assign-task')">+ New Task</button>
           </div>
-          <div class="task-list" id="recentTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet</div></div></div>
+          <div class="task-list" id="recentTasksList">
+            <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet</div></div>
+          </div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Upcoming Reminders</div></div>
-          <div id="dashReminderList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+          <div class="card-header">
+            <div class="card-title">Upcoming Reminders</div>
+          </div>
+          <div id="dashReminderList">
+            <div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ═══ LEADER: ASSIGN TASK ═══ -->
+    <!-- ── LEADER: AI CHAT ── -->
+    <div id="view-ai-chat" class="view">
+      <div class="page-header">
+        <div class="page-title">🤖 AI <span>Assistant</span></div>
+        <div class="page-sub">Ask me to create notes, assign tasks, set reminders, or manage your team</div>
+      </div>
+      <div class="card" style="height:calc(100vh - 200px)">
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg">
+              <div class="msg-avatar">🤖</div>
+              <div class="msg-bubble">
+                <strong>TPS AI Assistant</strong> — Powered by <span style="color:#00e5a0">Wisefox Solution</span> 🤖<br/><br/>
+                Main kya kar sakta hoon:<br/>
+                • 📝 <strong>Note banao:</strong> "Note karo: Client call Friday 4pm"<br/>
+                • 📋 <strong>Task assign karo:</strong> "Rahul ko logo design task do, due 30 June, high priority"<br/>
+                • 🔔 <strong>Reminder set karo:</strong> "Kal subah 9 baje standup ka reminder do sabko"<br/>
+                • 📊 <strong>Status dekho:</strong> "Team ka status dikhao" ya "Kitne tasks pending hain?"<br/><br/>
+                💡 <strong>Hindi, English, Hinglish</strong> — sab samajhta hoon!<br/>
+                <small style="color:var(--muted)">⚙️ Settings mein OpenAI API Key add karo for GPT-4.1. Bina key ke local mode chalega.</small>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <textarea class="chat-input" id="chatInput" placeholder="Type your command... e.g. 'Assign task Design logo to John, due 2024-12-31, high priority'" onkeydown="chatKeyDown(event)"></textarea>
+            <button class="btn-send" onclick="sendChat()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEADER: ASSIGN TASK ── -->
     <div id="view-assign-task" class="view">
       <div class="page-header">
         <div class="page-title">📋 Assign <span>Task</span></div>
-        <div class="page-sub">Create and assign tasks to team members</div>
+        <div class="page-sub">Create and assign tasks to your team members</div>
       </div>
-      <div class="card" style="max-width:620px">
+      <div class="card" style="max-width:640px">
         <div class="form-group">
           <label class="form-label">Task Title *</label>
-          <input type="text" class="form-control" id="taskTitle" placeholder="e.g. Install Windows on client PC"/>
+          <input class="form-control" id="taskTitle" placeholder="e.g. Design new landing page"/>
         </div>
         <div class="form-group">
           <label class="form-label">Description</label>
-          <textarea class="form-control" id="taskDesc" rows="3" placeholder="Task details, instructions..."></textarea>
+          <textarea class="form-control" id="taskDesc" rows="3" placeholder="Task details and requirements..."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Assign To *</label>
-            <select class="form-control" id="taskAssignee"><option value="">Select Member...</option></select>
+            <select class="form-control" id="taskAssignee">
+              <option value="">Select Member...</option>
+            </select>
           </div>
           <div class="form-group">
             <label class="form-label">Priority</label>
             <select class="form-control" id="taskPriority">
-              <option value="high">🔴 High</option>
-              <option value="medium" selected>🟡 Medium</option>
-              <option value="low">🟢 Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
             </select>
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Due Date</label>
-            <input type="date" class="form-control" id="taskDue"/>
+            <label class="form-label">Due Date *</label>
+            <input class="form-control" type="date" id="taskDue"/>
           </div>
           <div class="form-group">
-            <label class="form-label">Related Client</label>
-            <select class="form-control" id="taskClient"><option value="">No Client</option></select>
+            <label class="form-label">Reminder Date</label>
+            <input class="form-control" type="datetime-local" id="taskReminder"/>
           </div>
         </div>
-        <button class="btn-primary" onclick="createTask()">Assign Task</button>
+        <div class="flex-end">
+          <button class="btn-secondary" onclick="resetTaskForm()">Reset</button>
+          <button class="btn-primary" onclick="createTask()">Assign Task ➤</button>
+        </div>
       </div>
     </div>
 
-    <!-- ═══ LEADER: ALL TASKS ═══ -->
+    <!-- ── LEADER: ALL TASKS ── -->
     <div id="view-all-tasks" class="view">
       <div class="page-header">
         <div class="page-title">✅ All <span>Tasks</span></div>
-        <div class="page-sub">Team task overview</div>
+        <div class="page-sub">Monitor and manage all team tasks</div>
       </div>
-      <div class="filter-tabs">
-        <span class="filter-tab active" onclick="setTaskFilter(this,'all')">All</span>
-        <span class="filter-tab" onclick="setTaskFilter(this,'pending')">⏳ Pending</span>
-        <span class="filter-tab" onclick="setTaskFilter(this,'inprogress')">🔄 In Progress</span>
-        <span class="filter-tab" onclick="setTaskFilter(this,'review')">👁 Review</span>
-        <span class="filter-tab" onclick="setTaskFilter(this,'done')">✅ Done</span>
-        <span class="filter-tab" onclick="setTaskFilter(this,'overdue')">⚠️ Overdue</span>
-      </div>
-      <div class="task-list" id="allTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks</div></div></div>
-    </div>
-
-    <!-- ═══ LEADER: CLIENTS ═══ -->
-    <div id="view-clients" class="view">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
-        <div>
-          <div class="page-title">🏢 <span>Clients</span></div>
-          <div class="page-sub">Agency clients, contacts, payments & orders</div>
+      <div class="card">
+        <div class="card-header">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-sm btn-done" onclick="filterTasks('all')" id="fAll">All</button>
+            <button class="btn-sm" onclick="filterTasks('pending')" id="fPending" style="background:rgba(255,209,102,0.15);color:#ffd166">Pending</button>
+            <button class="btn-sm" onclick="filterTasks('inprogress')" id="fInprogress" style="background:rgba(0,153,255,0.12);color:#0099ff">In Progress</button>
+            <button class="btn-sm btn-del" onclick="filterTasks('overdue')" id="fOverdue">Overdue</button>
+          </div>
         </div>
-        <button class="btn-primary" onclick="openModal('addClientModal')">+ Add Client</button>
+        <div class="task-list" id="allTasksList">
+          <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks found</div></div>
+        </div>
       </div>
-      <!-- Filter tabs -->
-      <div class="filter-tabs">
-        <span class="filter-tab active" onclick="clientFilterTab(this,'all')">All</span>
-        <span class="filter-tab" onclick="clientFilterTab(this,'agency')">🏦 Agency</span>
-        <span class="filter-tab" onclick="clientFilterTab(this,'corporate')">🏢 Corporate</span>
-        <span class="filter-tab" onclick="clientFilterTab(this,'retail')">🛍 Retail</span>
-        <span class="filter-tab" onclick="clientFilterTab(this,'service')">🔧 Service</span>
-      </div>
-      <!-- Search -->
-      <div class="client-search-row">
-        <input type="text" class="form-control" placeholder="🔍 Search clients..." oninput="searchClients(this.value)" style="flex:1"/>
-      </div>
-      <div class="client-list-wrap" id="clientList"><div class="empty-state"><div class="empty-icon">🏢</div><div class="empty-text">No clients yet</div></div></div>
     </div>
 
-    <!-- ═══ LEADER: REMINDERS ═══ -->
+    <!-- ── LEADER: REMINDERS ── -->
     <div id="view-reminders" class="view">
       <div class="page-header">
         <div class="page-title">🔔 <span>Reminders</span></div>
-        <div class="page-sub">Schedule reminders for team members</div>
+        <div class="page-sub">All scheduled reminders for your team</div>
       </div>
-      <div class="card" style="max-width:560px">
-        <div class="card-title" style="margin-bottom:16px">Set New Reminder</div>
+      <div class="card" style="max-width:600px;margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:16px">Add Manual Reminder</div>
         <div class="form-group">
           <label class="form-label">Reminder Title</label>
-          <input type="text" class="form-control" id="remTitle" placeholder="e.g. Follow up with client"/>
+          <input class="form-control" id="remTitle" placeholder="e.g. Weekly standup call"/>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Date & Time</label>
-            <input type="datetime-local" class="form-control" id="remTime"/>
+            <input class="form-control" type="datetime-local" id="remTime"/>
           </div>
           <div class="form-group">
             <label class="form-label">For Member</label>
@@ -325,434 +889,935 @@
             </select>
           </div>
         </div>
-        <button class="btn-primary" onclick="createReminder()">Set Reminder 🔔</button>
+        <div class="flex-end">
+          <button class="btn-primary" onclick="createReminder()">Add Reminder 🔔</button>
+        </div>
       </div>
       <div class="card">
         <div class="card-title" style="margin-bottom:16px">All Reminders</div>
-        <div id="remindersList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+        <div id="remindersList">
+          <div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders set</div></div>
+        </div>
       </div>
     </div>
 
-    <!-- ═══ LEADER: TEAM MEMBERS ═══ -->
+    <!-- ── LEADER: MEMBERS ── -->
     <div id="view-members" class="view">
       <div class="page-header">
         <div class="page-title">👥 Team <span>Members</span></div>
-        <div class="page-sub">Manage your team</div>
+        <div class="page-sub">Manage your group members and their roles</div>
       </div>
-      <div class="card" style="max-width:520px;margin-bottom:22px">
-        <div class="card-title" style="margin-bottom:16px">Add Team Member</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Name</label>
-            <input type="text" class="form-control" id="inviteName" placeholder="Member name"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-control" id="inviteEmail" placeholder="member@gmail.com"/>
-          </div>
+      <div class="card" style="max-width:500px;margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:16px">Add Member by Email</div>
+        <div style="display:flex;gap:10px">
+          <input class="form-control" id="newMemberEmail" placeholder="member@gmail.com"/>
+          <button class="btn-primary" onclick="addMember()">Add</button>
         </div>
-        <button class="btn-primary" onclick="inviteMember()">Add Member</button>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">Member must login with this Google email to access their tasks.</p>
       </div>
-      <div class="member-grid" id="memberGrid"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No members yet</div></div></div>
+      <div class="member-grid" id="memberGrid">
+        <div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No members yet. Add members above.</div></div>
+      </div>
     </div>
 
-    <!-- ═══ LEADER: NOTES/NOTEBOOK ═══ -->
+    <!-- ── LEADER: NOTES ── -->
     <div id="view-notes" class="view">
-      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between">
-        <div>
-          <div class="page-title">📓 <span>Notebook</span></div>
-          <div class="page-sub">Personal notes and quick captures</div>
-        </div>
-        <button class="btn-primary" onclick="newNote()">+ New Note</button>
-      </div>
-      <div class="notebook-header">
-        <input type="text" class="form-control" placeholder="🔍 Search notes..." oninput="searchNotes()" id="noteSearch" style="flex:1;max-width:280px"/>
-        <span class="filter-tab active" onclick="noteFilterTab(this,'all')">All</span>
-        <span class="filter-tab" onclick="noteFilterTab(this,'work')">💼 Work</span>
-        <span class="filter-tab" onclick="noteFilterTab(this,'client')">🏢 Client</span>
-        <span class="filter-tab" onclick="noteFilterTab(this,'personal')">👤 Personal</span>
-      </div>
-      <div class="note-grid" id="noteGrid"><div class="empty-state"><div class="empty-icon">📓</div><div class="empty-text">No notes yet. Click + to create.</div></div></div>
-    </div>
-
-    <!-- ═══ LEADER: SETTINGS ═══ -->
-    <div id="view-settings" class="view">
       <div class="page-header">
-        <div class="page-title">⚙️ <span>Settings</span></div>
-        <div class="page-sub">API Key, PIN, App Configuration</div>
+        <div class="page-title">📝 My <span>Notes</span></div>
+        <div class="page-sub">Notes created via AI Assistant</div>
       </div>
-      <!-- OpenAI API -->
-      <div class="settings-section">
-        <div class="settings-title">🤖 AI Configuration</div>
-        <div id="apiKeyStatus" class="api-key-status tag">Not Set</div>
-        <div style="margin:12px 0">
-          <label class="form-label">OpenAI API Key</label>
-          <div class="api-key-row">
-            <input type="password" class="form-control" id="apiKeyInput" placeholder="sk-..."/>
-            <button class="btn-sm btn-secondary" onclick="toggleApiKeyVisibility()">👁</button>
-          </div>
+      <div class="card" style="max-width:640px;margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:16px">Quick Note</div>
+        <div class="form-group">
+          <textarea class="form-control" id="quickNote" rows="3" placeholder="Write your note here..."></textarea>
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-primary" onclick="saveApiKey()">Save Key</button>
-          <button class="btn-secondary" onclick="clearApiKey()">Remove</button>
+        <div class="flex-end">
+          <button class="btn-primary" onclick="saveQuickNote()">Save Note 📝</button>
         </div>
       </div>
-      <!-- AI PIN Change -->
-      <div class="settings-section">
-        <div class="settings-title">🔐 Change AI PIN</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Current PIN</label>
-            <input type="password" class="form-control" id="changePinOld" placeholder="Current PIN" maxlength="8"/>
-          </div>
-          <div class="form-group">
-            <label class="form-label">New PIN</label>
-            <input type="password" class="form-control" id="changePinNew" placeholder="New PIN (min 4)" maxlength="8"/>
-          </div>
-        </div>
-        <button class="btn-primary" onclick="changePIN()">Change PIN</button>
-      </div>
-      <!-- App Info -->
-      <div class="settings-section">
-        <div class="settings-title">📊 App Information</div>
-        <div class="client-detail-grid">
-          <div class="client-detail-item"><div class="client-detail-label">App</div><div class="client-detail-value">TPS Client Desk v2.0</div></div>
-          <div class="client-detail-item"><div class="client-detail-label">Powered By</div><div class="client-detail-value" style="color:var(--accent)">Wisefox Solution 🦊</div></div>
-          <div class="client-detail-item"><div class="client-detail-label">Firebase Project</div><div class="client-detail-value">turning-point-task-manager</div></div>
-          <div class="client-detail-item"><div class="client-detail-label">AI Model</div><div class="client-detail-value">GPT-4o (via OpenAI)</div></div>
-        </div>
+      <div class="notes-grid" id="notesList">
+        <div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">No notes yet</div></div>
       </div>
     </div>
 
-    <!-- ═══ MEMBER: MY TASKS ═══ -->
+    <!-- ── MEMBER: MY TASKS ── -->
     <div id="view-my-tasks" class="view">
       <div class="page-header">
         <div class="page-title">📋 My <span>Tasks</span></div>
-        <div class="page-sub">Tasks assigned to you. Click on a task to update and chat.</div>
+        <div class="page-sub">Tasks assigned to you by your group leader</div>
       </div>
-      <div class="task-list" id="myTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks assigned yet</div></div></div>
+      <div class="card">
+        <div class="task-list" id="myTasksList">
+          <div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks assigned yet</div></div>
+        </div>
+      </div>
     </div>
 
-    <!-- ═══ MEMBER: MY REMINDERS ═══ -->
+    <!-- ── MEMBER: MY REMINDERS ── -->
     <div id="view-my-reminders" class="view">
       <div class="page-header">
         <div class="page-title">🔔 My <span>Reminders</span></div>
-        <div class="page-sub">Reminders set by your team leader</div>
+        <div class="page-sub">Reminders set for you by your leader</div>
       </div>
-      <div id="myRemindersList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div></div>
+      <div class="card">
+        <div id="myRemindersList">
+          <div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders yet</div></div>
+        </div>
+      </div>
     </div>
 
-    <!-- ═══ MEMBER: MY PROGRESS ═══ -->
+    <!-- ── MEMBER: PROGRESS ── -->
     <div id="view-my-progress" class="view">
       <div class="page-header">
         <div class="page-title">📈 My <span>Progress</span></div>
-        <div class="page-sub">Your task completion stats</div>
+        <div class="page-sub">Track your task completion</div>
       </div>
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="myStatTotal">0</div></div>
-        <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="myStatDone">0</div></div>
-        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value yellow" id="myStatPending">0</div></div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Completion Rate</div>
-          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--accent)" id="myProgressPct">0%</div>
+        <div class="stat-card">
+          <div class="stat-label">Total Assigned</div>
+          <div class="stat-value blue" id="myStatTotal">0</div>
         </div>
-        <div class="progress-lg-wrap"><div class="progress-lg-fill" id="myProgressFill" style="width:0%"></div></div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value green" id="myStatDone">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-value yellow" id="myStatPending">0</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:400px">
+        <div class="card-title" style="margin-bottom:16px">Completion Rate</div>
+        <div id="myProgressBar">
+          <div style="font-size:32px;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent)" id="myProgressPct">0%</div>
+          <div class="progress-bar-wrap" style="margin-top:12px;height:10px">
+            <div class="progress-bar-fill" id="myProgressFill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEADER: SETTINGS ── -->
+    <div id="view-settings" class="view">
+      <div class="page-header">
+        <div class="page-title">⚙️ <span>Settings</span></div>
+        <div class="page-sub">Configure AI API key and app preferences</div>
+      </div>
+
+      <!-- AI API KEY CARD -->
+      <div class="card" style="max-width:580px;margin-bottom:20px">
+        <div class="card-header" style="margin-bottom:0">
+          <div>
+            <div class="card-title">🤖 OpenAI API Key (GPT-4.1)</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px">Enter your OpenAI API key to enable GPT-4.1 AI responses. Key is saved securely in Firebase.</div>
+          </div>
+          <div id="apiKeyStatus" style="font-size:12px;padding:4px 10px;border-radius:20px;background:rgba(255,107,107,0.15);color:#ff6b6b">Not Set</div>
+        </div>
+        <div class="divider"></div>
+        <div class="form-group">
+          <label class="form-label">OpenAI API Key</label>
+          <div style="display:flex;gap:10px">
+            <input class="form-control" type="password" id="apiKeyInput" placeholder="sk-proj-... या sk-..."/>
+            <button class="btn-sm" id="toggleApiKeyBtn" onclick="toggleApiKeyVisibility()" style="background:var(--surface2);color:var(--muted);padding:0 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;white-space:nowrap">👁 Show</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn-primary" onclick="saveApiKey()">Save API Key 🔑</button>
+          <button class="btn-secondary" onclick="clearApiKey()">Clear Key</button>
+          <button class="btn-sm" onclick="testApiKey()" style="background:rgba(0,153,255,0.15);color:#0099ff;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-family:inherit">🧪 Test Key</button>
+          <a href="https://platform.openai.com/api-keys" target="_blank" style="font-size:12px;color:var(--accent2);text-decoration:none">Get API Key →</a>
+        </div>
+        <div id="testResult" style="display:none;margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px"></div>
+        <div style="margin-top:16px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);line-height:1.8">
+            <strong style="color:var(--text)">OpenAI API Key kaise milegi:</strong><br/>
+            1. <strong>platform.openai.com</strong> → Login / Sign up<br/>
+            2. Left menu → <strong>API Keys</strong> → Create new secret key<br/>
+            3. Key copy karo (sk-proj-... format) → Yahan paste karo<br/>
+            4. ₹ Credit add karo (~$5 = months ka use) 💳
+          </div>
+        </div>
+      </div>
+
+      <!-- APP INFO CARD -->
+      <div class="card" style="max-width:580px">
+        <div class="card-title" style="margin-bottom:16px">📊 App Information</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:var(--surface2);border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">LEADER EMAIL</div>
+            <div style="font-size:13px;font-weight:500"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6a0403065a5a5a0403060f19022a0d070b030644090507">[email&#160;protected]</a></div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">FIREBASE PROJECT</div>
+            <div style="font-size:13px;font-weight:500">turning-point-task-manager</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">APP VERSION</div>
+            <div style="font-size:13px;font-weight:500">v1.0.0 — TPS Client Desk AI</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:14px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">AI MODEL</div>
+            <div style="font-size:13px;font-weight:500" id="settingsModelInfo">GPT-4.1 (if key set)</div>
+          </div>
+        </div>
       </div>
     </div>
 
   </main>
 </div>
 
-<!-- ══════════ FLOATING AI BUTTON ══════════ -->
-<button class="ai-float-btn" id="aiFloatBtn" title="AI Assistant (PIN protected)">🦊</button>
-<div class="ai-float-chat" id="aiFloatChat">
-  <div class="ai-float-header">
-    <div class="ai-float-title">🦊 AI Assistant</div>
-    <button class="ai-float-close" onclick="closeAIFloat()">✕</button>
-  </div>
-  <div class="ai-float-messages" id="aiFloatMessages"></div>
-  <div class="ai-float-input-row">
-    <textarea class="ai-float-input" id="aiFloatInput" placeholder="Hindi, English, Hinglish..." onkeydown="aiFloatKeyDown(event)" rows="1"></textarea>
-    <button class="btn-send" onclick="sendAIChat()">➤</button>
-  </div>
-</div>
-
-<!-- ══════════ NOTE EDITOR PANEL ══════════ -->
-<div class="note-editor-panel" id="noteEditorPanel">
-  <div class="note-editor-header">
-    <div class="note-editor-title">📓 Note</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-sm btn-done" onclick="saveNote()">Save</button>
-      <button class="btn-sm btn-secondary" onclick="closeNoteEditor()">✕ Close</button>
-    </div>
-  </div>
-  <input type="text" class="note-editor-input" id="noteEditorTitle" placeholder="Note title..." oninput="noteAutoSave()"/>
-  <div class="form-row" style="margin-bottom:12px">
-    <div class="form-group" style="margin-bottom:0">
-      <label class="form-label">Category</label>
-      <select class="form-control" id="noteEditorCategory" onchange="noteAutoSave()">
-        <option value="">General</option>
-        <option value="work">💼 Work</option>
-        <option value="client">🏢 Client</option>
-        <option value="personal">👤 Personal</option>
-      </select>
-    </div>
-    <div class="form-group" style="margin-bottom:0">
-      <label class="form-label">Color</label>
-      <div class="note-color-btns" id="noteColorBtns">
-        <button class="note-color-btn active" data-color="#181c24" style="background:#181c24;border-color:rgba(255,255,255,0.3)" onclick="setNoteColor('#181c24')"></button>
-        <button class="note-color-btn" data-color="#0a1f1a" style="background:#0a1f1a" onclick="setNoteColor('#0a1f1a')"></button>
-        <button class="note-color-btn" data-color="#0a1020" style="background:#0a1020" onclick="setNoteColor('#0a1020')"></button>
-        <button class="note-color-btn" data-color="#130d1f" style="background:#130d1f" onclick="setNoteColor('#130d1f')"></button>
-        <button class="note-color-btn" data-color="#1f0d0d" style="background:#1f0d0d" onclick="setNoteColor('#1f0d0d')"></button>
-        <button class="note-color-btn" data-color="#1a1608" style="background:#1a1608" onclick="setNoteColor('#1a1608')"></button>
-      </div>
-    </div>
-  </div>
-  <textarea class="note-editor-content" id="noteEditorContent" placeholder="Start writing your note..." oninput="noteAutoSave()"></textarea>
-</div>
-
-<!-- ══════════ MODALS ══════════ -->
-
-<!-- Task Update/Chat Modal -->
-<div class="modal-overlay" id="taskUpdateModal">
-  <div class="modal modal-lg">
-    <div class="modal-title">💬 Task Update & Chat</div>
-    <div style="background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px">
-      <div style="font-size:16px;font-weight:600;margin-bottom:8px" id="taskUpdateTitle"></div>
-      <div style="display:flex;gap:12px;font-size:13px;color:var(--muted)">
-        <span>👤 <span id="taskUpdateAssignee"></span></span>
-        <span>📅 <span id="taskUpdateDue"></span></span>
-      </div>
-    </div>
-    <!-- Status update -->
-    <div class="form-group">
-      <label class="form-label">Update Status</label>
-      <select class="form-control" id="taskUpdateStatus">
-        <option value="pending">⏳ Pending</option>
-        <option value="inprogress">🔄 In Progress</option>
-        <option value="review">👁 Ready for Review</option>
-        <option value="done">✅ Done</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Add Update Note</label>
-      <textarea class="form-control" id="taskUpdateNote" rows="2" placeholder="Write an update message..."></textarea>
-    </div>
-    <button class="btn-primary" style="margin-bottom:16px" onclick="saveTaskUpdate()">Save Update</button>
-    <div class="divider"></div>
-    <!-- Chat -->
-    <div style="font-size:14px;font-weight:600;margin-bottom:10px">💬 Task Chat</div>
-    <div class="task-chat-wrap" id="taskChatMessages"></div>
-    <div class="chat-input-row">
-      <textarea class="chat-input" id="taskChatInput" placeholder="Message..." onkeydown="taskChatKeyDown(event)" rows="1"></textarea>
-      <button class="btn-send" onclick="sendTaskChat()">➤</button>
-    </div>
-    <div class="flex-end">
-      <button class="btn-secondary" onclick="closeModal('taskUpdateModal')">Close</button>
-    </div>
-  </div>
-</div>
-
-<!-- Add Client Modal -->
-<div class="modal-overlay" id="addClientModal">
+<!-- ══ MODAL: Task Detail ══ -->
+<div class="modal-overlay" id="taskDetailModal">
   <div class="modal">
-    <div class="modal-title">➕ Add New Client</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Client Name *</label>
-        <input type="text" class="form-control" id="cName" placeholder="Firm / Person name"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Phone *</label>
-        <input type="tel" class="form-control" id="cPhone" placeholder="9XXXXXXXXX"/>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-control" id="cEmail" placeholder="optional"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Client Type</label>
-        <select class="form-control" id="cType">
-          <option value="retail">🛍 Retail</option>
-          <option value="agency">🏦 Agency</option>
-          <option value="corporate">🏢 Corporate</option>
-          <option value="service">🔧 Service</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">City</label>
-        <input type="text" class="form-control" id="cCity" placeholder="e.g. Indore"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Address</label>
-        <input type="text" class="form-control" id="cAddress" placeholder="Full address"/>
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Notes</label>
-      <textarea class="form-control" id="cNotes" rows="2" placeholder="Any special notes..."></textarea>
-    </div>
+    <div class="modal-title">📋 Task Detail</div>
+    <div id="taskDetailContent"></div>
     <div class="flex-end">
-      <button class="btn-secondary" onclick="closeModal('addClientModal')">Cancel</button>
-      <button class="btn-primary" onclick="addClient()">Add Client</button>
+      <button class="btn-secondary" onclick="closeModal('taskDetailModal')">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Client Detail Modal -->
-<div class="modal-overlay" id="clientDetailModal">
-  <div class="modal modal-lg">
-    <div class="modal-title">🏢 <span id="cdName">Client</span></div>
-    <!-- Amount Summary -->
-    <div class="client-amount-row">
-      <div class="amount-card">
-        <div class="amount-label">Total Billed</div>
-        <div class="amount-value" id="cdTotalBilled" style="color:var(--leader)">₹0</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label">Total Paid</div>
-        <div class="amount-value" id="cdTotalPaid" style="color:var(--accent)">₹0</div>
-      </div>
-      <div class="amount-card">
-        <div class="amount-label">Outstanding</div>
-        <div class="amount-value" id="cdOutstanding" style="color:var(--accent3)">₹0</div>
-      </div>
-    </div>
-    <!-- Tabs -->
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="clientTab(this,'info')">📋 Info</button>
-      <button class="modal-tab" onclick="clientTab(this,'orders')">📦 Orders</button>
-      <button class="modal-tab" onclick="clientTab(this,'payments')">💰 Payments</button>
-      <button class="modal-tab" onclick="clientTab(this,'contacts')">📞 Contacts</button>
-    </div>
-    <!-- Info Tab -->
-    <div class="modal-section active" id="tab-info">
-      <div class="client-detail-grid">
-        <div class="client-detail-item"><div class="client-detail-label">Phone</div><div class="client-detail-value" id="cdPhone"></div></div>
-        <div class="client-detail-item"><div class="client-detail-label">Email</div><div class="client-detail-value" id="cdEmail"></div></div>
-        <div class="client-detail-item"><div class="client-detail-label">City</div><div class="client-detail-value" id="cdCity"></div></div>
-        <div class="client-detail-item"><div class="client-detail-label">Type</div><div class="client-detail-value" id="cdType"></div></div>
-      </div>
-      <div class="client-detail-item" style="margin-bottom:10px"><div class="client-detail-label">Address</div><div class="client-detail-value" id="cdAddress"></div></div>
-      <div class="client-detail-item"><div class="client-detail-label">Notes</div><div class="client-detail-value" id="cdNotes"></div></div>
-    </div>
-    <!-- Orders Tab -->
-    <div class="modal-section" id="tab-orders">
-      <div class="form-row-3" style="margin-bottom:12px">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Order Description</label>
-          <input type="text" class="form-control" id="orderDesc" placeholder="e.g. HP Laptop 15s"/>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Amount (₹)</label>
-          <input type="number" class="form-control" id="orderAmount" placeholder="0"/>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Status</label>
-          <select class="form-control" id="orderStatus">
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Order Date</label>
-        <input type="date" class="form-control" id="orderDate" style="max-width:200px"/>
-      </div>
-      <button class="btn-primary" onclick="addOrder()" style="margin-bottom:16px">Add Order</button>
-      <div id="clientOrdersList"></div>
-    </div>
-    <!-- Payments Tab -->
-    <div class="modal-section" id="tab-payments">
-      <div class="form-row" style="margin-bottom:12px">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Amount (₹)</label>
-          <input type="number" class="form-control" id="payAmount" placeholder="0"/>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Payment Mode</label>
-          <select class="form-control" id="payMode">
-            <option value="cash">Cash</option>
-            <option value="upi">UPI</option>
-            <option value="bank">Bank Transfer</option>
-            <option value="cheque">Cheque</option>
-            <option value="card">Card</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row" style="margin-bottom:12px">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Reference / UTR</label>
-          <input type="text" class="form-control" id="payRef" placeholder="Optional"/>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Payment Date</label>
-          <input type="date" class="form-control" id="payDate"/>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="addPayment()" style="margin-bottom:16px">Record Payment</button>
-      <div id="clientPaymentsList"></div>
-    </div>
-    <!-- Contacts Tab -->
-    <div class="modal-section" id="tab-contacts">
-      <div class="form-row" style="margin-bottom:12px">
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Contact Name</label>
-          <input type="text" class="form-control" id="contactName" placeholder="Name"/>
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label class="form-label">Phone</label>
-          <input type="tel" class="form-control" id="contactPhone" placeholder="9XXXXXXXXX"/>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Role / Designation</label>
-        <input type="text" class="form-control" id="contactRole" placeholder="e.g. Purchase Manager"/>
-      </div>
-      <button class="btn-primary" onclick="addContact()" style="margin-bottom:16px">Add Contact</button>
-      <div id="clientContactsList"></div>
-    </div>
-    <div class="flex-end">
-      <button class="btn-secondary" onclick="closeModal('clientDetailModal')">Close</button>
-    </div>
-  </div>
-</div>
+<!-- Firebase SDKs -->
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, set, get, push, onValue, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-<!-- Inline JS for tab switching (no module needed) -->
-<script>
-function setTaskFilter(el, filter) {
-  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  if(window.renderAllTasksList) renderAllTasksList(filter);
-}
-function clientFilterTab(el, filter) {
-  document.querySelectorAll('#view-clients .filter-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  if(window.filterClients) filterClients(filter);
-}
-function noteFilterTab(el, filter) {
-  document.querySelectorAll('#view-notes .filter-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  if(window.setNoteFilter) setNoteFilter(filter);
-}
-function clientTab(el, tab) {
-  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.querySelectorAll('.modal-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('tab-'+tab).classList.add('active');
-}
-</script>
+// ══ FIREBASE CONFIG ══
+// 🔧 REPLACE with your Firebase project config
+const firebaseConfig = {
+  apiKey: "AIzaSyAP6xYAgWtU8hyuJP2nximxRZRIJnwNgG0",
+  authDomain: "turning-point-task-manager.firebaseapp.com",
+  databaseURL: "https://turning-point-task-manager-default-rtdb.firebaseio.com",
+  projectId: "turning-point-task-manager",
+  storageBucket: "turning-point-task-manager.firebasestorage.app",
+  messagingSenderId: "922397311479",
+  appId: "1:922397311479:web:0c4ed59ee86331261daef2",
+  measurementId: "G-BX36LQ0T1J"
+};
 
-<!-- Firebase + App -->
-<script type="module" src="js/app.js"></script>
-</body>
-</html>
+// ══ LEADER EMAIL ══
+const LEADER_EMAIL = "nil000nilesh@gmail.com";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+let isLeader = false;
+let allTasks = [];
+let allReminders = [];
+let allMembers = [];
+let allNotes = [];
+
+// ══ AUTH ══
+window.loginWithGoogle = async () => {
+  try {
+    await signInWithPopup(auth, provider);
+  } catch(e) {
+    toast("Login failed: " + e.message, true);
+  }
+};
+
+window.logout = async () => {
+  await signOut(auth);
+  showScreen('login');
+  currentUser = null;
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    isLeader = user.email === LEADER_EMAIL;
+    await initApp();
+  } else {
+    showScreen('login');
+  }
+});
+
+async function initApp() {
+  showScreen('app');
+  setupSidebar();
+  if (isLeader) {
+    document.getElementById('leaderNav').style.display = 'block';
+    showView('dashboard');
+    loadLeaderData();
+  } else {
+    document.getElementById('memberNav').style.display = 'block';
+    // Register member
+    const safeEmail = currentUser.email.replace(/\./g,'_');
+    const memberRef = ref(db, `members/${safeEmail}`);
+    const snap = await get(memberRef);
+    if(!snap.exists()) {
+      await set(memberRef, {
+        name: currentUser.displayName,
+        email: currentUser.email,
+        photo: currentUser.photoURL || '',
+        joinedAt: Date.now()
+      });
+    }
+    showView('my-tasks');
+    loadMemberData();
+  }
+  // Reminder check every minute
+  setInterval(checkReminders, 60000);
+}
+
+function setupSidebar() {
+  const av = document.getElementById('sidebarAvatar');
+  if(currentUser.photoURL) {
+    av.innerHTML = `<img src="${currentUser.photoURL}"/>`;
+  } else {
+    av.textContent = (currentUser.displayName||'U')[0].toUpperCase();
+  }
+  document.getElementById('sidebarName').textContent = currentUser.displayName || currentUser.email;
+  const roleEl = document.getElementById('sidebarRole');
+  if(isLeader) { roleEl.textContent = '👑 Leader'; roleEl.className = 'user-role'; }
+  else { roleEl.textContent = 'Member'; roleEl.className = 'user-role member'; }
+  document.getElementById('dashName') && (document.getElementById('dashName').textContent = (currentUser.displayName||'').split(' ')[0]);
+}
+
+// ══ LEADER DATA ══
+function loadLeaderData() {
+  // Tasks
+  onValue(ref(db,'tasks'), (snap) => {
+    allTasks = [];
+    if(snap.exists()) {
+      snap.forEach(child => allTasks.push({id:child.key, ...child.val()}));
+    }
+    renderDashboard();
+    renderAllTasks('all');
+    renderRecentTasks();
+  });
+  // Reminders
+  onValue(ref(db,'reminders'), (snap) => {
+    allReminders = [];
+    if(snap.exists()) snap.forEach(c => allReminders.push({id:c.key,...c.val()}));
+    renderReminders();
+    updateReminderBadge();
+    renderDashReminders();
+  });
+  // Members
+  onValue(ref(db,'members'), (snap) => {
+    allMembers = [];
+    if(snap.exists()) snap.forEach(c => allMembers.push({id:c.key,...c.val()}));
+    renderMembers();
+    populateMemberSelects();
+  });
+  // Notes
+  onValue(ref(db,'notes'), (snap) => {
+    allNotes = [];
+    if(snap.exists()) snap.forEach(c => allNotes.push({id:c.key,...c.val()}));
+    renderNotes();
+  });
+}
+
+function renderDashboard() {
+  const now = Date.now();
+  let total=allTasks.length, done=0, progress=0, overdue=0;
+  allTasks.forEach(t => {
+    if(t.status==='done') done++;
+    else if(t.status==='inprogress') progress++;
+    if(t.status!=='done' && t.dueDate && new Date(t.dueDate).getTime() < now) overdue++;
+  });
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statProgress').textContent = progress;
+  document.getElementById('statOverdue').textContent = overdue;
+}
+
+function renderRecentTasks() {
+  const el = document.getElementById('recentTasksList');
+  const recent = allTasks.slice(-4).reverse();
+  if(!recent.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet</div></div>'; return; }
+  el.innerHTML = recent.map(t => taskHTML(t, true)).join('');
+}
+
+function renderAllTasks(filter) {
+  const el = document.getElementById('allTasksList');
+  const now = Date.now();
+  let tasks = allTasks;
+  if(filter==='pending') tasks = allTasks.filter(t=>t.status==='pending');
+  else if(filter==='inprogress') tasks = allTasks.filter(t=>t.status==='inprogress');
+  else if(filter==='overdue') tasks = allTasks.filter(t=>t.status!=='done'&&t.dueDate&&new Date(t.dueDate).getTime()<now);
+  if(!tasks.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks</div></div>'; return; }
+  el.innerHTML = tasks.map(t => taskHTML(t, true)).join('');
+}
+
+window.filterTasks = (f) => renderAllTasks(f);
+
+function taskHTML(t, isLeaderView) {
+  const overdue = t.status!=='done' && t.dueDate && new Date(t.dueDate).getTime() < Date.now();
+  return `<div class="task-item">
+    <div class="task-checkbox ${t.status==='done'?'done':''}" onclick="toggleTask('${t.id}','${t.status}')"></div>
+    <div class="task-body">
+      <div class="task-title ${t.status==='done'?'done':''}">${t.title}</div>
+      <div class="task-meta">
+        <span class="tag priority-${t.priority||'medium'}">${t.priority||'medium'}</span>
+        <span class="tag status-${t.status||'pending'}">${t.status||'pending'}</span>
+        ${t.assigneeName?`<span class="tag">👤 ${t.assigneeName}</span>`:''}
+        ${t.dueDate?`<span class="tag ${overdue?'priority-high':''}">${overdue?'⚠️ Overdue: ':'📅 '}${t.dueDate}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions">
+      ${isLeaderView ? `<button class="btn-sm btn-del" onclick="deleteTask('${t.id}')">🗑</button>` : ''}
+    </div>
+  </div>`;
+}
+
+window.toggleTask = async (id, currentStatus) => {
+  const newStatus = currentStatus==='done' ? 'pending' : currentStatus==='pending' ? 'inprogress' : 'done';
+  await update(ref(db,`tasks/${id}`), {status: newStatus});
+  toast(`Task marked as ${newStatus}`);
+};
+
+window.deleteTask = async (id) => {
+  if(!confirm('Delete this task?')) return;
+  await remove(ref(db,`tasks/${id}`));
+  toast('Task deleted');
+};
+
+window.createTask = async () => {
+  const title = document.getElementById('taskTitle').value.trim();
+  const desc = document.getElementById('taskDesc').value.trim();
+  const assigneeEmail = document.getElementById('taskAssignee').value;
+  const priority = document.getElementById('taskPriority').value;
+  const dueDate = document.getElementById('taskDue').value;
+  const reminderTime = document.getElementById('taskReminder').value;
+
+  if(!title) return toast('Task title required', true);
+  if(!assigneeEmail) return toast('Please select a member', true);
+
+  const assignee = allMembers.find(m=>m.email===assigneeEmail);
+
+  const taskData = {
+    title, desc,
+    assigneeEmail,
+    assigneeName: assignee?.name || assigneeEmail,
+    priority, dueDate,
+    status: 'pending',
+    createdAt: Date.now(),
+    createdBy: currentUser.email
+  };
+
+  const newRef = push(ref(db,'tasks'));
+  await set(newRef, taskData);
+
+  if(reminderTime) {
+    const remData = {
+      title: `Reminder: ${title}`,
+      time: new Date(reminderTime).getTime(),
+      forEmail: assigneeEmail,
+      taskId: newRef.key,
+      status: 'pending'
+    };
+    await push(ref(db,'reminders'), remData);
+  }
+
+  toast('Task assigned successfully! 🎉');
+  resetTaskForm();
+  showView('all-tasks');
+};
+
+window.resetTaskForm = () => {
+  ['taskTitle','taskDesc','taskDue','taskReminder'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('taskPriority').value = 'medium';
+  document.getElementById('taskAssignee').value = '';
+};
+
+window.createReminder = async () => {
+  const title = document.getElementById('remTitle').value.trim();
+  const time = document.getElementById('remTime').value;
+  const forEmail = document.getElementById('remMember').value;
+  if(!title||!time) return toast('Fill all reminder fields', true);
+  await push(ref(db,'reminders'), {
+    title, time: new Date(time).getTime(), forEmail, status:'pending', createdBy: currentUser.email
+  });
+  toast('Reminder added! 🔔');
+  document.getElementById('remTitle').value='';
+  document.getElementById('remTime').value='';
+};
+
+function renderReminders() {
+  const el = document.getElementById('remindersList');
+  if(!allReminders.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div>'; return; }
+  const now = Date.now();
+  el.innerHTML = allReminders.map(r => {
+    const overdue = r.time < now && r.status!=='done';
+    const dt = new Date(r.time).toLocaleString();
+    return `<div class="reminder-item">
+      <div class="reminder-icon ${overdue?'overdue':r.status==='done'?'done':'pending'}">${overdue?'⚠️':r.status==='done'?'✅':'🔔'}</div>
+      <div class="reminder-body">
+        <div class="reminder-title">${r.title}</div>
+        <div class="reminder-time ${overdue?'overdue':''}">${dt} ${r.forEmail?'• '+r.forEmail:''}</div>
+      </div>
+      <button class="btn-sm btn-del" onclick="deleteReminder('${r.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function renderDashReminders() {
+  const el = document.getElementById('dashReminderList');
+  const upcoming = allReminders.filter(r=>r.status!=='done').slice(0,4);
+  if(!upcoming.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div>'; return; }
+  el.innerHTML = upcoming.map(r => {
+    const dt = new Date(r.time).toLocaleString();
+    return `<div class="reminder-item"><div class="reminder-icon pending">🔔</div><div class="reminder-body"><div class="reminder-title">${r.title}</div><div class="reminder-time">${dt}</div></div></div>`;
+  }).join('');
+}
+
+window.deleteReminder = async (id) => {
+  await remove(ref(db,`reminders/${id}`));
+  toast('Reminder removed');
+};
+
+function updateReminderBadge() {
+  const pending = allReminders.filter(r=>r.status!=='done').length;
+  const el = document.getElementById('reminderBadge');
+  if(el) el.textContent = pending;
+}
+
+function renderMembers() {
+  const el = document.getElementById('memberGrid');
+  if(!allMembers.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No members</div></div>'; return; }
+  el.innerHTML = allMembers.map(m => {
+    const memberTasks = allTasks.filter(t=>t.assigneeEmail===m.email);
+    const done = memberTasks.filter(t=>t.status==='done').length;
+    const pct = memberTasks.length ? Math.round((done/memberTasks.length)*100) : 0;
+    return `<div class="member-card">
+      <div class="member-avatar-lg">${m.photo?`<img src="${m.photo}"/>`:(m.name||'?')[0]}</div>
+      <div class="member-name">${m.name||'Unknown'}</div>
+      <div class="member-email">${m.email}</div>
+      <div class="member-stats">
+        <div class="mstat"><div class="mstat-val">${memberTasks.length}</div><div class="mstat-label">Tasks</div></div>
+        <div class="mstat"><div class="mstat-val" style="color:var(--accent)">${done}</div><div class="mstat-label">Done</div></div>
+        <div class="mstat"><div class="mstat-val" style="color:var(--accent2)">${pct}%</div><div class="mstat-label">Rate</div></div>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function populateMemberSelects() {
+  const selects = ['taskAssignee','remMember'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const defaultOpt = id==='remMember' ? '<option value="all">All Members</option>' : '<option value="">Select Member...</option>';
+    el.innerHTML = defaultOpt + allMembers.map(m=>`<option value="${m.email}">${m.name||m.email}</option>`).join('');
+  });
+}
+
+window.addMember = async () => {
+  const email = document.getElementById('newMemberEmail').value.trim().toLowerCase();
+  if(!email || !email.includes('@')) return toast('Valid email required', true);
+  const safeEmail = email.replace(/\./g,'_');
+  await set(ref(db,`members/${safeEmail}`), { email, name: email.split('@')[0], joinedAt: Date.now() });
+  document.getElementById('newMemberEmail').value='';
+  toast('Member added! They can now login.');
+};
+
+function renderNotes() {
+  const el = document.getElementById('notesList');
+  if(!allNotes.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📝</div><div class="empty-text">No notes yet</div></div>'; return; }
+  el.innerHTML = allNotes.map(n=>`<div class="note-card">
+    <div class="note-content">${n.content}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div class="note-date">${new Date(n.createdAt).toLocaleDateString()}</div>
+      <button class="btn-sm btn-del" onclick="deleteNote('${n.id}')">🗑</button>
+    </div>
+  </div>`).join('');
+}
+
+window.saveQuickNote = async () => {
+  const content = document.getElementById('quickNote').value.trim();
+  if(!content) return toast('Note content required', true);
+  await push(ref(db,'notes'), { content, createdAt: Date.now(), createdBy: currentUser.email });
+  document.getElementById('quickNote').value = '';
+  toast('Note saved! 📝');
+};
+
+window.deleteNote = async (id) => {
+  await remove(ref(db,`notes/${id}`));
+  toast('Note deleted');
+};
+
+// ══ MEMBER DATA ══
+function loadMemberData() {
+  const myEmail = currentUser.email;
+  onValue(ref(db,'tasks'), (snap) => {
+    allTasks = [];
+    if(snap.exists()) snap.forEach(c => {
+      const t = {id:c.key,...c.val()};
+      if(t.assigneeEmail===myEmail) allTasks.push(t);
+    });
+    renderMyTasks();
+    renderMyProgress();
+    const pending = allTasks.filter(t=>t.status!=='done').length;
+    const badge = document.getElementById('myTaskBadge');
+    if(badge) badge.textContent = pending;
+  });
+  onValue(ref(db,'reminders'), (snap) => {
+    allReminders = [];
+    if(snap.exists()) snap.forEach(c => {
+      const r = {id:c.key,...c.val()};
+      if(r.forEmail===myEmail||r.forEmail==='all') allReminders.push(r);
+    });
+    renderMyReminders();
+    const pending = allReminders.filter(r=>r.status!=='done').length;
+    const badge = document.getElementById('myReminderBadge');
+    if(badge) badge.textContent = pending;
+  });
+}
+
+function renderMyTasks() {
+  const el = document.getElementById('myTasksList');
+  if(!allTasks.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks assigned yet. Check back soon!</div></div>'; return; }
+  el.innerHTML = allTasks.map(t => `<div class="task-item">
+    <div class="task-checkbox ${t.status==='done'?'done':''}" onclick="toggleTask('${t.id}','${t.status}')"></div>
+    <div class="task-body">
+      <div class="task-title ${t.status==='done'?'done':''}">${t.title}</div>
+      ${t.desc?`<div style="font-size:12px;color:var(--muted);margin:4px 0">${t.desc}</div>`:''}
+      <div class="task-meta">
+        <span class="tag priority-${t.priority||'medium'}">${t.priority||'medium'}</span>
+        <span class="tag status-${t.status||'pending'}">${t.status||'pending'}</span>
+        ${t.dueDate?`<span class="tag">📅 ${t.dueDate}</span>`:''}
+      </div>
+    </div>
+  </div>`).join('');
+}
+
+function renderMyReminders() {
+  const el = document.getElementById('myRemindersList');
+  if(!allReminders.length) { el.innerHTML='<div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders</div></div>'; return; }
+  const now = Date.now();
+  el.innerHTML = allReminders.map(r => {
+    const overdue = r.time < now;
+    return `<div class="reminder-item">
+      <div class="reminder-icon ${overdue?'overdue':'pending'}">${overdue?'⚠️':'🔔'}</div>
+      <div class="reminder-body">
+        <div class="reminder-title">${r.title}</div>
+        <div class="reminder-time ${overdue?'overdue':''}">${new Date(r.time).toLocaleString()}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMyProgress() {
+  const total = allTasks.length;
+  const done = allTasks.filter(t=>t.status==='done').length;
+  const pending = total - done;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('myStatTotal').textContent = total;
+  document.getElementById('myStatDone').textContent = done;
+  document.getElementById('myStatPending').textContent = pending;
+  document.getElementById('myProgressPct').textContent = pct+'%';
+  document.getElementById('myProgressFill').style.width = pct+'%';
+}
+
+// ══ REMINDER NOTIFICATION ══
+function checkReminders() {
+  const now = Date.now();
+  allReminders.forEach(async r => {
+    if(r.status==='pending' && r.time <= now && r.time > now - 70000) {
+      toast('🔔 Reminder: ' + r.title);
+      if(Notification.permission==='granted') {
+        new Notification('TPS Reminder', { body: r.title, icon: '🎯' });
+      }
+    }
+  });
+}
+
+if(Notification.permission==='default') Notification.requestPermission();
+
+// ══ AI CHATBOT ══
+window.chatKeyDown = (e) => {
+  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+};
+
+window.sendChat = async () => {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+
+  addChatMsg(msg, true);
+  showTyping();
+
+  // Parse intent
+  setTimeout(async () => {
+    const response = await processAICommand(msg);
+    removeTyping();
+    addChatMsg(response, false);
+  }, 800);
+};
+
+function addChatMsg(text, isUser) {
+  const el = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (isUser?' user':'');
+  div.innerHTML = `<div class="msg-avatar">${isUser?'👤':'🤖'}</div><div class="msg-bubble">${text}</div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+let typingEl = null;
+function showTyping() {
+  const el = document.getElementById('chatMessages');
+  typingEl = document.createElement('div');
+  typingEl.className = 'chat-msg';
+  typingEl.innerHTML = '<div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  el.appendChild(typingEl);
+  el.scrollTop = el.scrollHeight;
+}
+function removeTyping() { if(typingEl) { typingEl.remove(); typingEl=null; } }
+
+
+async function processAICommand(msg) {
+  const apiKey = await getStoredApiKey();
+  if(apiKey) return await callOpenAI(msg, apiKey);
+  return localAIProcess(msg);
+}
+
+// ══ OPENAI GPT-4.1 API ══
+async function callOpenAI(msg, apiKey) {
+  const teamContext = `You are TPS AI Assistant for "Turning Point Solution — Client Desk AI".
+You help Group Leader Nilesh manage his team tasks, notes and reminders.
+
+Team Members: ${allMembers.map(m=>`${m.name||m.email} (${m.email})`).join(', ')||'No members yet'}
+Tasks — Total:${allTasks.length} Done:${allTasks.filter(t=>t.status==='done').length} Pending:${allTasks.filter(t=>t.status==='pending').length} InProgress:${allTasks.filter(t=>t.status==='inprogress').length}
+Today: ${new Date().toISOString().split('T')[0]}
+
+STRICT RULES — respond ONLY with JSON for these actions (no extra text):
+- ADD NOTE → {"action":"note","content":"..."}
+- ASSIGN TASK → {"action":"task","title":"...","assigneeName":"...","assigneeEmail":"...","priority":"high/medium/low","dueDate":"YYYY-MM-DD","description":"..."}
+- SET REMINDER → {"action":"reminder","title":"...","forEmail":"all or email","hoursFromNow":1}
+For STATUS/REPORT/GENERAL questions → respond in clean HTML using <strong><ul><li> tags.
+Reply in same language as user (Hindi/English/Hinglish). Address leader as "Nilesh bhai" in Hindi.`;
+
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({
+        model:'gpt-4.1', max_tokens:700, temperature:0.4,
+        messages:[{role:'system',content:teamContext},{role:'user',content:msg}]
+      })
+    });
+
+    if(!res.ok) {
+      const err = await res.json();
+      const code = err.error?.code || err.error?.type || '';
+      if(code==='invalid_api_key'||code==='authentication_error') {
+        toast('❌ Invalid OpenAI API Key!', true);
+        return `❌ <strong>Invalid API Key</strong><br/>⚙️ Settings mein jaake OpenAI API Key update karo.`;
+      }
+      if(code==='insufficient_quota') {
+        toast('⚠️ OpenAI credits khatam!', true);
+        return `⚠️ <strong>Credits Khatam</strong><br/><a href="https://platform.openai.com/account/billing" target="_blank" style="color:#0099ff">platform.openai.com → Billing</a> pe credits add karo.`;
+      }
+      if(code==='model_not_found') return callOpenAIFallback(msg, apiKey, teamContext);
+      throw new Error(err.error?.message||'API error');
+    }
+
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content||'').trim();
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if(jsonMatch){try{const a=JSON.parse(jsonMatch[0]);if(a.action)return await executeAIAction(a,msg);}catch(e){}}
+    return text;
+
+  } catch(e) {
+    console.error('OpenAI error:',e);
+    return await localAIProcess(msg)+`<br/><small style="color:var(--muted)">⚠️ GPT-4.1 error: ${e.message}. Local mode.</small>`;
+  }
+}
+
+async function callOpenAIFallback(msg, apiKey, systemPrompt) {
+  try {
+    const res = await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',max_tokens:700,temperature:0.4,
+        messages:[{role:'system',content:systemPrompt},{role:'user',content:msg}]})
+    });
+    if(!res.ok) throw new Error('fallback failed');
+    const data = await res.json();
+    const text = (data.choices?.[0]?.message?.content||'').trim();
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if(jsonMatch){try{const a=JSON.parse(jsonMatch[0]);if(a.action)return await executeAIAction(a,msg);}catch(e){}}
+    return text+`<br/><small style="color:var(--muted)">(GPT-4o used — GPT-4.1 unavailable on this key)</small>`;
+  } catch(e) { return localAIProcess(msg); }
+}
+
+async function executeAIAction(action, originalMsg) {
+  if(action.action==='note') {
+    const content = action.content||originalMsg;
+    await push(ref(db,'notes'),{content,createdAt:Date.now(),createdBy:currentUser.email,source:'gpt-4.1'});
+    return `✅ <strong>Note saved by GPT-4.1!</strong><br/><br/>"${content}"<br/>📝 Notes section mein dekh sakte ho.`;
+  }
+  if(action.action==='task') {
+    let assigneeEmail=action.assigneeEmail||'', assigneeName=action.assigneeName||'';
+    if(!assigneeEmail&&assigneeName) {
+      const m=allMembers.find(m=>m.name?.toLowerCase().includes(assigneeName.toLowerCase())||m.email?.toLowerCase().includes(assigneeName.toLowerCase()));
+      if(m){assigneeEmail=m.email;assigneeName=m.name||m.email;}
+    }
+    if(!assigneeEmail) return `❌ <strong>Member nahi mila: "${assigneeName}"</strong><br/>Available:<br/>${allMembers.map(m=>`• ${m.name||m.email}`).join('<br/>')||'Koi member nahi. Members section mein add karo.'}`;
+    const member=allMembers.find(m=>m.email===assigneeEmail)||{email:assigneeEmail,name:assigneeName};
+    await push(ref(db,'tasks'),{title:action.title,desc:action.description||'',assigneeEmail:member.email,assigneeName:member.name||member.email,priority:action.priority||'medium',dueDate:action.dueDate||'',status:'pending',createdAt:Date.now(),createdBy:currentUser.email,source:'gpt-4.1'});
+    return `✅ <strong>Task assigned via GPT-4.1!</strong><br/>📋 <strong>${action.title}</strong><br/>👤 Assigned to: <strong>${member.name||member.email}</strong><br/>📅 Due: ${action.dueDate||'Not set'}<br/>🎯 Priority: <span style="color:${action.priority==='high'?'#ff6b6b':action.priority==='low'?'#00e5a0':'#ffd166'}">${action.priority||'medium'}</span>${action.description?`<br/>📝 ${action.description}`:''}`;
+  }
+  if(action.action==='reminder') {
+    const hours=parseFloat(action.hoursFromNow)||1;
+    const targetTime=Date.now()+(hours*60*60*1000);
+    await push(ref(db,'reminders'),{title:action.title,time:targetTime,forEmail:action.forEmail||'all',status:'pending',source:'gpt-4.1',createdBy:currentUser.email});
+    return `✅ <strong>Reminder set via GPT-4.1!</strong><br/>🔔 "${action.title}"<br/>⏰ ${new Date(targetTime).toLocaleString()}<br/>👥 For: ${action.forEmail==='all'?'All Members':action.forEmail}`;
+  }
+  return `🤔 Action recognized but unknown type. Please try again.`;
+}
+
+// ══ LOCAL FALLBACK AI ══
+async function localAIProcess(msg) {
+  const lower=msg.toLowerCase();
+  if(lower.includes('note')||lower.includes('याद')||lower.includes('नोट')) {
+    const content=msg.replace(/add note:|note:|add:|याद रखो:|नोट:/gi,'').trim();
+    if(content){await push(ref(db,'notes'),{content,createdAt:Date.now(),createdBy:currentUser.email,source:'local'});return `✅ <strong>Note saved!</strong><br/>"${content}"<br/>📝 Notes section mein dekho.`;}
+    return 'Note content chahiye. E.g.: <strong>"Add note: Meeting at 3pm"</strong>';
+  }
+  if(lower.includes('assign')||lower.includes('task')||lower.includes('काम')||lower.includes('टास्क')) {
+    const titleMatch=msg.match(/['"]([^'"]+)['"]|task\s+([^to]+?)\s+to/i);
+    const toMatch=msg.match(/to\s+([a-zA-Z0-9_.]+)/i);
+    const dueMatch=msg.match(/due\s+([^\s,]+)/i);
+    const prioMatch=msg.match(/high|medium|low/i);
+    if(titleMatch&&toMatch){
+      const title=(titleMatch[1]||titleMatch[2]||'').trim(),assigneeName=toMatch[1].trim(),due=dueMatch?dueMatch[1]:'',priority=prioMatch?prioMatch[0].toLowerCase():'medium';
+      const member=allMembers.find(m=>m.name?.toLowerCase().includes(assigneeName.toLowerCase())||m.email.includes(assigneeName.toLowerCase()));
+      if(!member)return `❌ Member "<strong>${assigneeName}</strong>" not found.<br/>Available: <strong>${allMembers.map(m=>m.name||m.email).join(', ')||'No members'}</strong>`;
+      await push(ref(db,'tasks'),{title,assigneeEmail:member.email,assigneeName:member.name||member.email,priority,dueDate:due,status:'pending',createdAt:Date.now(),createdBy:currentUser.email,source:'local'});
+      return `✅ <strong>Task assigned!</strong><br/>📋 ${title}<br/>👤 To: ${member.name}<br/>📅 ${due||'No date'}<br/>🎯 ${priority}`;
+    }
+    return `Format: <strong>"Assign task 'Name' to Member, due 2025-12-31, high priority"</strong><br/>Members: <strong>${allMembers.map(m=>m.name||m.email).join(', ')||'No members'}</strong><br/><small style="color:#ffd166">💡 OpenAI API Key add karo for smarter AI!</small>`;
+  }
+  if(lower.includes('remind')||lower.includes('याद दिला')) {
+    const content=msg.replace(/remind(er)?(\s+about)?|set\s+reminder|याद दिला/gi,'').trim();
+    if(content){await push(ref(db,'reminders'),{title:content,time:Date.now()+(60*60*1000),forEmail:'all',status:'pending',source:'local',createdBy:currentUser.email});return `✅ <strong>Reminder set!</strong><br/>🔔 "${content}"<br/>⏰ 1 hour from now`;}
+  }
+  if(lower.includes('status')||lower.includes('summary')||lower.includes('report')||lower.includes('kitne')||lower.includes('कितने')) {
+    const total=allTasks.length,done=allTasks.filter(t=>t.status==='done').length,pending=allTasks.filter(t=>t.status==='pending').length,inprog=allTasks.filter(t=>t.status==='inprogress').length;
+    return `📊 <strong>Team Status</strong><br/><ul><li>Total: <strong>${total}</strong></li><li>✅ Done: <strong style="color:#00e5a0">${done}</strong></li><li>🔄 In Progress: <strong style="color:#0099ff">${inprog}</strong></li><li>⏳ Pending: <strong style="color:#ffd166">${pending}</strong></li><li>👥 Members: <strong>${allMembers.length}</strong></li></ul>${total?`<br/>Rate: <strong style="color:#00e5a0">${Math.round((done/total)*100)}%</strong>`:''}`;
+  }
+  if(lower.includes('help')||lower.includes('मदद')) {
+    return `🤖 <strong>Commands (Local Mode):</strong><br/><ul><li>📝 "Add note: ..."</li><li>📋 "Assign task 'X' to Name, due 2025-12-31, high"</li><li>🔔 "Remind team about..."</li><li>📊 "Show status"</li></ul><br/><small style="color:#ffd166">💡 ⚙️ Settings → OpenAI API Key add karo for GPT-4.1!</small>`;
+  }
+  return `🤔 "<strong>${msg}</strong>"<br/>Say <strong>"help"</strong> for commands.<br/><small style="color:var(--muted)">💡 Settings → OpenAI API Key add karo for GPT-4.1 AI!</small>`;
+}
+
+// ══ API KEY MANAGEMENT ══
+let cachedApiKey = null;
+
+async function getStoredApiKey() {
+  if(cachedApiKey) return cachedApiKey;
+  try {
+    const snap = await get(ref(db,'settings/openaiApiKey'));
+    if(snap.exists()){cachedApiKey=snap.val();return cachedApiKey;}
+  } catch(e){}
+  return null;
+}
+
+window.saveApiKey = async () => {
+  const key=document.getElementById('apiKeyInput').value.trim();
+  if(!key) return toast('API Key empty hai!',true);
+  if(!key.startsWith('sk-')) return toast('Invalid format — "sk-" se start honi chahiye',true);
+  await set(ref(db,'settings/openaiApiKey'),key);
+  cachedApiKey=key;
+  updateApiKeyStatus(true);
+  toast('✅ OpenAI API Key Firebase mein save ho gai!');
+  document.getElementById('apiKeyInput').value='';
+};
+
+window.clearApiKey = async () => {
+  if(!confirm('API Key remove karna chahte ho?')) return;
+  await remove(ref(db,'settings/openaiApiKey'));
+  cachedApiKey=null;
+  updateApiKeyStatus(false);
+  document.getElementById('apiKeyInput').value='';
+  toast('API Key remove ho gayi');
+};
+
+window.testApiKey = async () => {
+  const key=document.getElementById('apiKeyInput').value.trim()||cachedApiKey;
+  if(!key) return toast('Pehle API key enter karo',true);
+  const resultEl=document.getElementById('testResult');
+  resultEl.style.display='block';
+  resultEl.style.background='rgba(0,153,255,0.1)';
+  resultEl.style.borderLeft='3px solid #0099ff';
+  resultEl.innerHTML='🔄 Testing GPT-4.1 connection...';
+  try {
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${key}`},
+      body:JSON.stringify({model:'gpt-4.1',max_tokens:20,messages:[{role:'user',content:'Say: TPS OK'}]})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error?.message||'Error');
+    const reply=data.choices?.[0]?.message?.content||'';
+    resultEl.style.background='rgba(0,229,160,0.1)';
+    resultEl.style.borderLeft='3px solid #00e5a0';
+    resultEl.innerHTML=`✅ <strong>GPT-4.1 Connected!</strong> Response: "${reply}"`;
+  } catch(e) {
+    resultEl.style.background='rgba(255,107,107,0.1)';
+    resultEl.style.borderLeft='3px solid #ff6b6b';
+    resultEl.innerHTML=`❌ <strong>Test Failed:</strong> ${e.message}`;
+  }
+};
+
+window.toggleApiKeyVisibility = () => {
+  const inp=document.getElementById('apiKeyInput'),btn=document.getElementById('toggleApiKeyBtn');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈 Hide';}
+  else{inp.type='password';btn.textContent='👁 Show';}
+};
+
+function updateApiKeyStatus(hasKey) {
+  const el=document.getElementById('apiKeyStatus');
+  if(!el) return;
+  if(hasKey){
+    el.textContent='✅ GPT-4.1 Active';
+    el.style.background='rgba(0,229,160,0.15)';el.style.color='#00e5a0';
+    const mi=document.getElementById('settingsModelInfo');if(mi)mi.textContent='GPT-4.1 ✅ Active';
+  } else {
+    el.textContent='Not Set';
+    el.style.background='rgba(255,107,107,0.15)';el.style.color='#ff6b6b';
+    const mi=document.getElementById('settingsModelInfo');if(mi)mi.textContent='Local Mode (no API key)';
+  }
+}
+
+async function loadApiKeyStatus() {
+  const key=await getStoredApiKey();
+  updateApiKeyStatus(!!key);
+}
+
+// ══ HELPERS ══
+window.showView = (name) => {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const view = document.getElementById('view-'+name);
+  if(view) view.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')===`showView('${name}')`) n.classList.add('active');
+  });
+  if(name==='settings') loadApiKeyStatus();
+};
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+}
+
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+
+function toast(msg, isError=false) {
+  const el
