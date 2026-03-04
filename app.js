@@ -1,7 +1,7 @@
 // ══════════════════════════════════════════════════════
 //  TPS Client Desk AI — Main App (Consolidated)
 //  Powered by Wisefox Solution
-//  Version: 2.0.0
+//  Version: 3.0.0 — Firestore Edition
 // ══════════════════════════════════════════════════════
 
 import { initializeApp }               from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -9,14 +9,16 @@ import { getAuth, GoogleAuthProvider,
          signInWithPopup, signInWithRedirect,
          getRedirectResult, onAuthStateChanged,
          signOut }                      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, set, get,
-         push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getFirestore,
+         collection, doc,
+         setDoc, getDoc, addDoc,
+         onSnapshot, updateDoc, deleteDoc,
+         query, where, orderBy }        from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ── CONFIG ──────────────────────────────────────────
 const firebaseConfig = {
   apiKey:            "AIzaSyAP6xYAgWtU8hyuJP2nximxRZRIJnwNgG0",
   authDomain:        "turning-point-task-manager.firebaseapp.com",
-  databaseURL:       "https://turning-point-task-manager-default-rtdb.firebaseio.com",
   projectId:         "turning-point-task-manager",
   storageBucket:     "turning-point-task-manager.firebasestorage.app",
   messagingSenderId: "922397311479",
@@ -30,7 +32,7 @@ const ROLES = { ADMIN:'admin', LEADER:'leader', MEMBER:'member' };
 // ── FIREBASE INIT ────────────────────────────────────
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
-const db       = getDatabase(app);
+const db       = getFirestore(app);
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });
 
@@ -42,6 +44,8 @@ let allTasks = [], allMembers = [], allClients = [], allNotes = [], allReminders
 let currentTaskId = null, viewingClientId = null, activeNoteId = null;
 let cachedApiKey = null;
 let tasksFilter = 'all';
+// Firestore unsubscribe handles
+let _unsubTaskChat = null;
 
 // ── HELPERS ──────────────────────────────────────────
 function safeKey(email) { return email.replace(/\./g,'_').replace(/@/g,'__at__'); }
@@ -92,22 +96,18 @@ function emptyState(icon, text) {
 //  AUTH
 // ═══════════════════════════════════════════════════════
 
-// ── Reset button on every page load (stuck state fix) ──
 function resetLoginBtn() {
   const btn = document.getElementById('googleLoginBtn');
   const txt = document.getElementById('googleBtnText');
   if (btn) btn.disabled = false;
   if (txt) txt.innerHTML = '<strong>Continue with Google</strong><br/><small style="font-weight:400;font-size:11px;color:#6b7280">Secure one-tap sign in</small>';
 }
-resetLoginBtn(); // call immediately on load
+resetLoginBtn();
 
-// ── Handle redirect result FIRST (before anything else) ──
 getRedirectResult(auth).then(result => {
   if (result?.user) {
-    // onAuthStateChanged will handle initApp
     console.log('✅ Redirect login success:', result.user.email);
   } else {
-    // No redirect result — normal page load
     resetLoginBtn();
   }
 }).catch(e => {
@@ -115,7 +115,6 @@ getRedirectResult(auth).then(result => {
   const ignoreCodes = ['auth/no-auth-event','auth/null-user','auth/missing-initial-state'];
   if (!ignoreCodes.includes(e.code)) {
     console.error('Redirect error:', e.code, e.message);
-    // Show error only if it's meaningful
     if (e.code === 'auth/unauthorized-domain') {
       showLoginError('Domain authorized nahi hai. Firebase Console → Authentication → Authorized Domains mein apna domain add karo.');
     } else if (e.code !== 'auth/popup-closed-by-user') {
@@ -136,28 +135,22 @@ window.loginWithGoogle = async () => {
   const txt = document.getElementById('googleBtnText');
   const errEl = document.getElementById('loginErrorMsg');
   if (errEl) errEl.style.display = 'none';
-
   if (btn) btn.disabled = true;
   if (txt) txt.innerHTML = '<strong>Signing in...</strong><br/><small style="color:#6b7280">Please wait...</small>';
-
   try {
-    // Try popup first
     await signInWithPopup(auth, provider);
-    // Success handled by onAuthStateChanged
   } catch(e) {
     console.log('Popup error:', e.code);
     if (['auth/popup-blocked','auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(e.code)) {
       if (e.code !== 'auth/popup-closed-by-user') {
-        // Popup was blocked — use redirect
         if (txt) txt.innerHTML = '<strong>Redirecting to Google...</strong><br/><small style="color:#6b7280">Please wait, do not refresh</small>';
         try {
           await signInWithRedirect(auth, provider);
-          return; // Page will reload after Google auth
+          return;
         } catch(e2) {
           showLoginError('Redirect failed: ' + e2.message);
         }
       } else {
-        // User closed popup — just reset
         resetLoginBtn();
       }
     } else if (e.code === 'auth/unauthorized-domain') {
@@ -179,20 +172,14 @@ onAuthStateChanged(auth, async user => {
     console.log('✅ Auth user:', user.email);
     currentUser = user;
     try {
-      // Add timeout protection for DB reads
       const timeout = (ms) => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
       currentRole  = await Promise.race([resolveRole(user),  timeout(5000)]).catch(() => {
-        console.warn('resolveRole timeout — using MEMBER default');
         return user.email === ADMIN_EMAIL ? ROLES.ADMIN : ROLES.MEMBER;
       });
-      currentTeamId = await Promise.race([resolveTeam(user), timeout(5000)]).catch(() => {
-        console.warn('resolveTeam timeout — using null');
-        return null;
-      });
+      currentTeamId = await Promise.race([resolveTeam(user), timeout(5000)]).catch(() => null);
       await Promise.race([registerUser(user), timeout(5000)]).catch(e => console.warn('registerUser failed:', e));
     } catch(e) {
       console.error('Pre-init error:', e);
-      // Still try to init with defaults
       if (user.email === ADMIN_EMAIL) currentRole = ROLES.ADMIN;
     }
     try {
@@ -210,31 +197,26 @@ onAuthStateChanged(auth, async user => {
 async function resolveRole(user) {
   if (user.email === ADMIN_EMAIL) return ROLES.ADMIN;
   try {
-    const snap = await get(ref(db, `roles/${safeKey(user.email)}`));
+    const snap = await getDoc(doc(db, 'roles', safeKey(user.email)));
     if (snap.exists()) {
-      const role = snap.val().role;
+      const role = snap.data().role;
       console.log('Role from DB:', role);
       return role || ROLES.MEMBER;
     }
   } catch(e) {
-    console.warn('resolveRole DB error:', e.code || e.message);
+    console.warn('resolveRole error:', e.message);
   }
   return ROLES.MEMBER;
 }
 
 async function resolveTeam(user) {
   try {
-    const snap = await get(ref(db, 'teams'));
-    if (!snap.exists()) return null;
-    let teamId = null;
-    snap.forEach(child => {
-      const t = child.val();
-      if (t.leaderEmail === user.email) teamId = child.key;
-      if (t.members?.[safeKey(user.email)]) teamId = child.key;
-    });
-    return teamId;
+    // Check if leader
+    const roleSnap = await getDoc(doc(db, 'roles', safeKey(user.email)));
+    if (roleSnap.exists() && roleSnap.data().teamId) return roleSnap.data().teamId;
+    return null;
   } catch(e) {
-    console.warn('resolveTeam DB error:', e.code || e.message);
+    console.warn('resolveTeam error:', e.message);
     return null;
   }
 }
@@ -242,11 +224,15 @@ async function resolveTeam(user) {
 async function registerUser(user) {
   const k = safeKey(user.email);
   try {
-    const snap = await get(ref(db, `users/${k}`));
+    const snap = await getDoc(doc(db, 'users', k));
     const data = { name: user.displayName || user.email.split('@')[0], email: user.email, photo: user.photoURL || '', lastSeen: Date.now() };
-    if (!snap.exists()) data.createdAt = Date.now();
-    await set(ref(db, `users/${k}`), snap.exists() ? {...snap.val(), ...data} : data);
-  } catch(e) {}
+    if (!snap.exists()) {
+      data.createdAt = Date.now();
+      await setDoc(doc(db, 'users', k), data);
+    } else {
+      await updateDoc(doc(db, 'users', k), data);
+    }
+  } catch(e) { console.warn('registerUser error:', e.message); }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -315,14 +301,15 @@ function initMemberModules() {
 // ═══════════════════════════════════════════════════════
 
 function subscribeMembers() {
-  onValue(ref(db, 'users'), snap => {
-    onValue(ref(db, 'roles'), rolesSnap => {
+  // Listen to users collection
+  onSnapshot(collection(db, 'users'), usersSnap => {
+    onSnapshot(collection(db, 'roles'), rolesSnap => {
       const roles = {};
-      if (rolesSnap.exists()) rolesSnap.forEach(c => { roles[c.key] = c.val(); });
+      rolesSnap.forEach(c => { roles[c.id] = c.data(); });
       allMembers = [];
-      if (snap.exists()) snap.forEach(c => {
-        const u = {id: c.key, ...c.val()};
-        const r = roles[c.key] || {};
+      usersSnap.forEach(c => {
+        const u = {id: c.id, ...c.data()};
+        const r = roles[c.id] || {};
         u.role = r.role || 'member';
         u.teamId = r.teamId || '';
         if (currentTeamId) {
@@ -356,10 +343,16 @@ window.inviteMember = async () => {
   if (!email || !email.includes('@')) return toast('Valid email required', true);
   const k = safeKey(email);
   try {
-    const snap = await get(ref(db, `users/${k}`));
-    if (!snap.exists()) await set(ref(db, `users/${k}`), {email, name: name || email.split('@')[0], photo:'', createdAt: Date.now()});
-    await set(ref(db, `roles/${k}`), {role:'member', email, teamId: currentTeamId||'', updatedAt: Date.now()});
-    if (currentTeamId) await set(ref(db, `teams/${currentTeamId}/members/${k}`), {email, addedAt: Date.now()});
+    const snap = await getDoc(doc(db, 'users', k));
+    if (!snap.exists()) {
+      await setDoc(doc(db, 'users', k), {email, name: name || email.split('@')[0], photo:'', createdAt: Date.now()});
+    }
+    await setDoc(doc(db, 'roles', k), {role:'member', email, teamId: currentTeamId||'', updatedAt: Date.now()});
+    if (currentTeamId) {
+      await updateDoc(doc(db, 'teams', currentTeamId), {
+        [`members.${k}`]: {email, addedAt: Date.now()}
+      });
+    }
     toast(`✅ ${email} added as member`);
     ['inviteEmail','inviteName'].forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
   } catch(e) { toast('Error: ' + e.message, true); }
@@ -382,9 +375,9 @@ function populateReminderMemberSelect() {
 // ═══════════════════════════════════════════════════════
 
 function subscribeTasks() {
-  onValue(ref(db, 'tasks'), snap => {
+  onSnapshot(collection(db, 'tasks'), snap => {
     const raw = [];
-    if (snap.exists()) snap.forEach(c => raw.push({id: c.key, ...c.val()}));
+    snap.forEach(c => raw.push({id: c.id, ...c.data()}));
     if (currentRole === ROLES.MEMBER) {
       allTasks = raw.filter(t => t.assigneeEmail === currentUser.email);
     } else if (currentRole === ROLES.LEADER) {
@@ -481,19 +474,19 @@ function renderRecentTasks() {
 function statusIcon(s) { return s==='done'?'✅':s==='inprogress'?'🔄':s==='review'?'👁':'⏳'; }
 
 window.createTask = async () => {
-  const title   = document.getElementById('taskTitle')?.value.trim();
-  const desc    = document.getElementById('taskDesc')?.value.trim();
-  const email   = document.getElementById('taskAssignee')?.value;
-  const priority= document.getElementById('taskPriority')?.value || 'medium';
-  const dueDate = document.getElementById('taskDue')?.value;
-  const clientId= document.getElementById('taskClient')?.value;
+  const title    = document.getElementById('taskTitle')?.value.trim();
+  const desc     = document.getElementById('taskDesc')?.value.trim();
+  const email    = document.getElementById('taskAssignee')?.value;
+  const priority = document.getElementById('taskPriority')?.value || 'medium';
+  const dueDate  = document.getElementById('taskDue')?.value;
+  const clientId = document.getElementById('taskClient')?.value;
   if (!title) return toast('Task title required', true);
   if (!email) return toast('Select assignee', true);
   const member = allMembers.find(m => m.email === email) || {email, name:email};
   const cSelect = document.getElementById('taskClient');
   const clientName = clientId && cSelect ? cSelect.options[cSelect.selectedIndex]?.text || '' : '';
   try {
-    await push(ref(db, 'tasks'), {
+    await addDoc(collection(db, 'tasks'), {
       title, desc:desc||'', assigneeEmail:member.email, assigneeName:member.name||member.email,
       priority, dueDate:dueDate||'', status:'pending',
       clientId:clientId||'', clientName: clientId ? clientName : '',
@@ -513,14 +506,14 @@ window.resetTaskForm = () => {
 
 window.deleteTask = async (id) => {
   if (!confirm('Delete task?')) return;
-  await remove(ref(db, `tasks/${id}`));
+  await deleteDoc(doc(db, 'tasks', id));
   toast('Task deleted');
 };
 
 window.cycleTaskStatus = async (id, current) => {
   const order = ['pending','inprogress','review','done'];
   const next = order[(order.indexOf(current)+1) % order.length];
-  await update(ref(db, `tasks/${id}`), {status:next, updatedAt:Date.now()});
+  await updateDoc(doc(db, 'tasks', id), {status:next, updatedAt:Date.now()});
   toast(`Status → ${next}`);
 };
 
@@ -545,7 +538,7 @@ window.openTaskUpdate = async (taskId) => {
 window.updateTaskStatus = async () => {
   if (!currentTaskId) return;
   const status = document.getElementById('taskUpdateStatus').value;
-  await update(ref(db, `tasks/${currentTaskId}`), {status, updatedAt:Date.now()});
+  await updateDoc(doc(db, 'tasks', currentTaskId), {status, updatedAt:Date.now()});
 };
 
 window.sendTaskChat = async () => {
@@ -553,8 +546,9 @@ window.sendTaskChat = async () => {
   const input = document.getElementById('taskChatInput');
   const text = input.value.trim(); if (!text) return;
   const status = document.getElementById('taskUpdateStatus').value;
-  await update(ref(db, `tasks/${currentTaskId}`), {status, updatedAt:Date.now()});
-  await push(ref(db, `taskChats/${currentTaskId}`), {
+  await updateDoc(doc(db, 'tasks', currentTaskId), {status, updatedAt:Date.now()});
+  // Store chat in subcollection: tasks/{taskId}/chats
+  await addDoc(collection(db, 'tasks', currentTaskId, 'chats'), {
     text, by:currentUser.email, byName:currentUser.displayName||currentUser.email,
     type:'message', timestamp:Date.now()
   });
@@ -566,9 +560,12 @@ window.taskChatKeyDown = (e) => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefa
 function loadTaskChat(taskId) {
   const el = document.getElementById('taskChatMessages'); if (!el) return;
   el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Loading...</div>';
-  onValue(ref(db, `taskChats/${taskId}`), snap => {
+  // Unsubscribe previous listener
+  if (_unsubTaskChat) { _unsubTaskChat(); _unsubTaskChat = null; }
+  const chatsRef = collection(db, 'tasks', taskId, 'chats');
+  _unsubTaskChat = onSnapshot(query(chatsRef, orderBy('timestamp', 'asc')), snap => {
     let msgs = [];
-    if (snap.exists()) snap.forEach(c => msgs.push({id:c.key,...c.val()}));
+    snap.forEach(c => msgs.push({id:c.id,...c.data()}));
     if (!msgs.length) { el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">No messages yet. Start the conversation!</div>'; return; }
     el.innerHTML = msgs.map(m => {
       const isMe = m.by === currentUser.email;
@@ -588,9 +585,9 @@ function loadTaskChat(taskId) {
 let clientSearch = '', clientFilter = 'all';
 
 function subscribeClients() {
-  onValue(ref(db, 'clients'), snap => {
+  onSnapshot(collection(db, 'clients'), snap => {
     allClients = [];
-    if (snap.exists()) snap.forEach(c => allClients.push({id:c.key,...c.val()}));
+    snap.forEach(c => allClients.push({id: c.id, ...c.data()}));
     renderClientList();
     populateClientSelect();
     setEl('statClients', allClients.length);
@@ -636,7 +633,7 @@ window.addClient = async () => {
   if (!name) return toast('Client name required', true);
   if (!phone) return toast('Phone required', true);
   try {
-    await push(ref(db, 'clients'), {
+    await addDoc(collection(db, 'clients'), {
       name, phone, email:email||'', type:type||'retail', city:city||'',
       gst:gst||'', address:address||'', notes:notes||'',
       outstanding:0, totalPaid:0, totalBilled:0,
@@ -657,7 +654,6 @@ window.openClientDetail = async (clientId) => {
   document.getElementById('cdOutstanding').textContent = '₹' + Number(client.outstanding||0).toLocaleString('en-IN');
   document.getElementById('cdTotalBilled').textContent = '₹' + Number(client.totalBilled||0).toLocaleString('en-IN');
   document.getElementById('cdTotalPaid').textContent = '₹' + Number(client.totalPaid||0).toLocaleString('en-IN');
-  // Set today as default pay/order date
   const today = new Date().toISOString().split('T')[0];
   ['orderDate','payDate'].forEach(id => { const e=document.getElementById(id); if(e&&!e.value) e.value=today; });
   loadClientOrders(clientId);
@@ -680,9 +676,16 @@ window.addOrder = async () => {
   const status = document.getElementById('orderStatus')?.value;
   if (!desc) return toast('Order description required', true);
   try {
-    await push(ref(db, `clientOrders/${viewingClientId}`), {desc, amount, date:date||new Date().toISOString().split('T')[0], status:status||'pending', createdAt:Date.now(), createdBy:currentUser.email});
+    // Store orders as subcollection: clients/{clientId}/orders
+    await addDoc(collection(db, 'clients', viewingClientId, 'orders'), {
+      desc, amount, date:date||new Date().toISOString().split('T')[0],
+      status:status||'pending', createdAt:Date.now(), createdBy:currentUser.email
+    });
     const client = allClients.find(c => c.id===viewingClientId);
-    await update(ref(db, `clients/${viewingClientId}`), {totalBilled:(client?.totalBilled||0)+amount, outstanding:(client?.outstanding||0)+amount});
+    await updateDoc(doc(db, 'clients', viewingClientId), {
+      totalBilled:(client?.totalBilled||0)+amount,
+      outstanding:(client?.outstanding||0)+amount
+    });
     toast('Order added');
     document.getElementById('orderDesc').value = '';
     document.getElementById('orderAmount').value = '';
@@ -691,11 +694,12 @@ window.addOrder = async () => {
 
 function loadClientOrders(clientId) {
   const el = document.getElementById('clientOrdersList'); if (!el) return;
-  onValue(ref(db, `clientOrders/${clientId}`), snap => {
+  onSnapshot(collection(db, 'clients', clientId, 'orders'), snap => {
     let orders = [];
-    if (snap.exists()) snap.forEach(c => orders.push({id:c.key,...c.val()}));
+    snap.forEach(c => orders.push({id:c.id,...c.data()}));
+    orders.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
     if (!orders.length) { el.innerHTML = emptyState('📦','No orders yet'); return; }
-    el.innerHTML = orders.reverse().map(o => `<div class="order-row">
+    el.innerHTML = orders.map(o => `<div class="order-row">
       <div class="order-info"><div class="order-desc">${o.desc}</div><div class="order-meta">${o.date||'—'} · <span class="tag status-${o.status||'pending'}">${o.status||'pending'}</span></div></div>
       <div class="order-amount">₹${Number(o.amount||0).toLocaleString('en-IN')}</div>
     </div>`).join('');
@@ -710,13 +714,20 @@ window.addPayment = async () => {
   const date   = document.getElementById('payDate')?.value;
   if (!amount) return toast('Amount required', true);
   try {
-    await push(ref(db, `clientPayments/${viewingClientId}`), {amount, mode:mode||'cash', ref:refNo||'', date:date||new Date().toISOString().split('T')[0], createdAt:Date.now(), createdBy:currentUser.email});
+    // Store payments as subcollection: clients/{clientId}/payments
+    await addDoc(collection(db, 'clients', viewingClientId, 'payments'), {
+      amount, mode:mode||'cash', ref:refNo||'',
+      date:date||new Date().toISOString().split('T')[0],
+      createdAt:Date.now(), createdBy:currentUser.email
+    });
     const client = allClients.find(c => c.id===viewingClientId);
-    await update(ref(db, `clients/${viewingClientId}`), {totalPaid:(client?.totalPaid||0)+amount, outstanding:Math.max(0,(client?.outstanding||0)-amount)});
+    await updateDoc(doc(db, 'clients', viewingClientId), {
+      totalPaid:(client?.totalPaid||0)+amount,
+      outstanding:Math.max(0,(client?.outstanding||0)-amount)
+    });
     toast('✅ Payment recorded');
     document.getElementById('payAmount').value = '';
     document.getElementById('payRef').value = '';
-    // Refresh outstanding display
     const newOutstanding = Math.max(0,(client?.outstanding||0)-amount);
     document.getElementById('cdOutstanding').textContent = '₹' + newOutstanding.toLocaleString('en-IN');
   } catch(e) { toast('Error: '+e.message, true); }
@@ -724,11 +735,12 @@ window.addPayment = async () => {
 
 function loadClientPayments(clientId) {
   const el = document.getElementById('clientPaymentsList'); if (!el) return;
-  onValue(ref(db, `clientPayments/${clientId}`), snap => {
+  onSnapshot(collection(db, 'clients', clientId, 'payments'), snap => {
     let pays = [];
-    if (snap.exists()) snap.forEach(c => pays.push({id:c.key,...c.val()}));
+    snap.forEach(c => pays.push({id:c.id,...c.data()}));
+    pays.sort((a,b) => (b.createdAt||0)-(a.createdAt||0));
     if (!pays.length) { el.innerHTML = emptyState('💰','No payments yet'); return; }
-    el.innerHTML = pays.reverse().map(p => `<div class="payment-row">
+    el.innerHTML = pays.map(p => `<div class="payment-row">
       <div class="pay-icon">💰</div>
       <div class="pay-info"><div class="pay-mode">${p.mode||'cash'} ${p.ref?'· '+p.ref:''}</div><div class="pay-date">${p.date||'—'}</div></div>
       <div class="pay-amount" style="color:var(--accent)">+₹${Number(p.amount||0).toLocaleString('en-IN')}</div>
@@ -743,7 +755,9 @@ window.addContact = async () => {
   const cRole  = document.getElementById('contactRole')?.value.trim();
   if (!cName || !cPhone) return toast('Name and phone required', true);
   try {
-    await push(ref(db, `clientContacts/${viewingClientId}`), {name:cName, phone:cPhone, role:cRole||'', createdAt:Date.now()});
+    await addDoc(collection(db, 'clients', viewingClientId, 'contacts'), {
+      name:cName, phone:cPhone, role:cRole||'', createdAt:Date.now()
+    });
     toast('Contact added');
     ['contactName','contactPhone','contactRole'].forEach(id => {const e=document.getElementById(id);if(e)e.value='';});
   } catch(e) { toast('Error: '+e.message, true); }
@@ -751,9 +765,9 @@ window.addContact = async () => {
 
 function loadClientContacts(clientId) {
   const el = document.getElementById('clientContactsList'); if (!el) return;
-  onValue(ref(db, `clientContacts/${clientId}`), snap => {
+  onSnapshot(collection(db, 'clients', clientId, 'contacts'), snap => {
     let contacts = [];
-    if (snap.exists()) snap.forEach(c => contacts.push({id:c.key,...c.val()}));
+    snap.forEach(c => contacts.push({id:c.id,...c.data()}));
     if (!contacts.length) { el.innerHTML = emptyState('📞','No contacts yet'); return; }
     el.innerHTML = contacts.map(c => `<div class="contact-row">
       <div class="contact-avatar">${(c.name||'C')[0]}</div>
@@ -773,10 +787,12 @@ function populateClientSelect() {
 // ═══════════════════════════════════════════════════════
 
 function subscribeNotes() {
-  const notesPath = `notes/${safeKey(currentUser.email)}`;
-  onValue(ref(db, notesPath), snap => {
+  const ownerKey = safeKey(currentUser.email);
+  // Store notes in collection with ownerKey field for filtering
+  const q = query(collection(db, 'notes'), where('ownerKey', '==', ownerKey));
+  onSnapshot(q, snap => {
     allNotes = [];
-    if (snap.exists()) snap.forEach(c => allNotes.push({id:c.key,...c.val()}));
+    snap.forEach(c => allNotes.push({id:c.id,...c.data()}));
     allNotes.sort((a,b) => (b.updatedAt||b.createdAt||0) - (a.updatedAt||a.createdAt||0));
     renderNoteList();
   });
@@ -809,30 +825,31 @@ window.openNoteById = (id) => {
 
 window.newNote = async () => {
   try {
-    const newRef = await push(ref(db, `notes/${safeKey(currentUser.email)}`), {
+    const newRef = await addDoc(collection(db, 'notes'), {
       title:'', content:'', category:'', color:'#181c24',
+      ownerKey: safeKey(currentUser.email),
       createdAt:Date.now(), updatedAt:Date.now(), createdBy:currentUser.email
     });
-    activeNoteId = newRef.key;
-    setTimeout(() => openNoteById(newRef.key), 300);
+    activeNoteId = newRef.id;
+    setTimeout(() => openNoteById(newRef.id), 300);
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
 window.saveNote = async () => {
   if (!activeNoteId) return;
-  const title   = document.getElementById('noteEditorTitle')?.value.trim() || 'Untitled';
-  const content = document.getElementById('noteEditorContent')?.value || '';
-  const category= document.getElementById('noteCategory')?.value || '';
-  const color   = document.querySelector('.note-color-btn.active')?.dataset.color || '#181c24';
+  const title    = document.getElementById('noteEditorTitle')?.value.trim() || 'Untitled';
+  const content  = document.getElementById('noteEditorContent')?.value || '';
+  const category = document.getElementById('noteCategory')?.value || '';
+  const color    = document.querySelector('.note-color-btn.active')?.dataset.color || '#181c24';
   try {
-    await update(ref(db, `notes/${safeKey(currentUser.email)}/${activeNoteId}`), {title, content, category, color, updatedAt:Date.now()});
+    await updateDoc(doc(db, 'notes', activeNoteId), {title, content, category, color, updatedAt:Date.now()});
   } catch(e) {}
 };
 
 window.deleteCurrentNote = async () => {
   if (!activeNoteId) return;
   if (!confirm('Delete this note?')) return;
-  await remove(ref(db, `notes/${safeKey(currentUser.email)}/${activeNoteId}`));
+  await deleteDoc(doc(db, 'notes', activeNoteId));
   activeNoteId = null;
   document.getElementById('noteEditorTitle').value = '';
   document.getElementById('noteEditorContent').value = '';
@@ -855,9 +872,9 @@ window.renderNoteList = renderNoteList;
 // ═══════════════════════════════════════════════════════
 
 function subscribeReminders() {
-  onValue(ref(db, 'reminders'), snap => {
+  onSnapshot(collection(db, 'reminders'), snap => {
     const raw = [];
-    if (snap.exists()) snap.forEach(c => raw.push({id:c.key,...c.val()}));
+    snap.forEach(c => raw.push({id:c.id,...c.data()}));
     if (currentRole === ROLES.ADMIN) {
       allReminders = raw;
     } else if (currentRole === ROLES.LEADER) {
@@ -884,7 +901,7 @@ function renderReminders() {
       <div class="reminder-icon">${overdue?'⚠️':r.status==='done'?'✅':'🔔'}</div>
       <div class="reminder-body">
         <div class="reminder-title">${r.title}</div>
-        <div class="reminder-time${overdue?' overdue':''}">${formatDateTime(r.time)} ${r.forEmail&&r.forEmail!=='all'?'· '+r.forEmail:r.forEmail==='all'?'· All':''}  </div>
+        <div class="reminder-time${overdue?' overdue':''}">${formatDateTime(r.time)} ${r.forEmail&&r.forEmail!=='all'?'· '+r.forEmail:r.forEmail==='all'?'· All':''}</div>
       </div>
       <div style="display:flex;gap:6px">
         ${r.status!=='done'?`<button class="btn-sm btn-done" onclick="doneReminder('${r.id}')">✅</button>`:''}
@@ -923,15 +940,19 @@ window.createReminder = async () => {
   const forEmail = document.getElementById('remMember')?.value || 'all';
   if (!title || !time) return toast('Fill all fields', true);
   try {
-    await push(ref(db, 'reminders'), {title, time:new Date(time).getTime(), forEmail, status:'pending', teamId:currentTeamId||'', createdAt:Date.now(), createdBy:currentUser.email});
+    await addDoc(collection(db, 'reminders'), {
+      title, time:new Date(time).getTime(), forEmail,
+      status:'pending', teamId:currentTeamId||'',
+      createdAt:Date.now(), createdBy:currentUser.email
+    });
     toast('🔔 Reminder set!');
     document.getElementById('remTitle').value = '';
     document.getElementById('remTime').value = '';
   } catch(e) { toast('Error: '+e.message, true); }
 };
 
-window.doneReminder = async (id) => { await update(ref(db, `reminders/${id}`), {status:'done'}); toast('Done!'); };
-window.deleteReminder = async (id) => { await remove(ref(db, `reminders/${id}`)); toast('Removed'); };
+window.doneReminder   = async (id) => { await updateDoc(doc(db,'reminders',id), {status:'done'}); toast('Done!'); };
+window.deleteReminder = async (id) => { await deleteDoc(doc(db,'reminders',id)); toast('Removed'); };
 
 function updateReminderBadge() {
   const pending = allReminders.filter(r => r.status !== 'done').length;
@@ -958,27 +979,31 @@ let adminTeams = [], adminUsers = [];
 
 function initAdminModule() {
   let latestUsers = null, latestRoles = null;
+
   function mergeAndRender() {
     if (!latestUsers) return;
     adminUsers = [];
     latestUsers.forEach(c => {
-      const role = latestRoles?.[c.key]?.role || 'member';
-      adminUsers.push({id:c.key,...c.val(), role});
+      const role = latestRoles?.[c.id]?.role || 'member';
+      adminUsers.push({id:c.id, ...c.data(), role});
     });
     renderAdminUserList();
   }
-  onValue(ref(db, 'users'), snap => {
-    latestUsers = snap.exists() ? snap : null;
+
+  onSnapshot(collection(db, 'users'), snap => {
+    latestUsers = snap;
     mergeAndRender();
   });
-  onValue(ref(db, 'roles'), snap => {
+
+  onSnapshot(collection(db, 'roles'), snap => {
     latestRoles = {};
-    if (snap.exists()) snap.forEach(c => { latestRoles[c.key] = c.val(); });
+    snap.forEach(c => { latestRoles[c.id] = c.data(); });
     mergeAndRender();
   });
-  onValue(ref(db, 'teams'), snap => {
+
+  onSnapshot(collection(db, 'teams'), snap => {
     adminTeams = [];
-    if (snap.exists()) snap.forEach(c => adminTeams.push({id:c.key,...c.val()}));
+    snap.forEach(c => adminTeams.push({id:c.id,...c.data()}));
     renderAdminTeamList();
     populateAdminTeamSelect();
   });
@@ -991,20 +1016,37 @@ window.adminCreateTeam = async () => {
   if (!email || !email.includes('@')) return toast('Valid leader email required', true);
   try {
     const k = safeKey(email);
-    const teamRef = push(ref(db, 'teams'));
-    const teamId = teamRef.key;
-    await set(teamRef, {name, leaderEmail:email, createdAt:Date.now()});
-    await set(ref(db, `roles/${k}`), {role:ROLES.LEADER, email, teamId, updatedAt:Date.now()});
-    // Register leader as user if not already present
-    const userSnap = await get(ref(db, `users/${k}`));
+
+    // 1. Team create karo (members field mein leader bhi add karo)
+    const teamRef = await addDoc(collection(db, 'teams'), {
+      name,
+      leaderEmail: email,
+      createdAt: Date.now(),
+      members: { [k]: { email, role: 'leader', addedAt: Date.now() } }
+    });
+    const teamId = teamRef.id;
+
+    // 2. Leader ka role set karo
+    await setDoc(doc(db, 'roles', k), {
+      role: ROLES.LEADER, email, teamId, updatedAt: Date.now()
+    });
+
+    // 3. User register karo
+    const userSnap = await getDoc(doc(db, 'users', k));
     if (!userSnap.exists()) {
-      await set(ref(db, `users/${k}`), {name: email.split('@')[0], email, photo:'', createdAt:Date.now()});
+      await setDoc(doc(db, 'users', k), {
+        name: email.split('@')[0], email, photo: '',
+        role: 'leader', teamId, createdAt: Date.now()
+      });
+    } else {
+      await updateDoc(doc(db, 'users', k), { role: 'leader', teamId, updatedAt: Date.now() });
     }
-    toast(`✅ Team "${name}" created!`);
-    ['newTeamName','newTeamLeader'].forEach(id => {const e=document.getElementById(id);if(e)e.value='';});
+
+    toast(`✅ Team "${name}" created! Leader: ${email}`);
+    ['newTeamName','newTeamLeader'].forEach(id => { const e=document.getElementById(id); if(e) e.value=''; });
   } catch(e) {
     console.error('adminCreateTeam error:', e);
-    toast('Error: '+e.message, true);
+    toast('❌ Error: ' + e.message, true);
   }
 };
 
@@ -1012,24 +1054,44 @@ window.adminAddMember = async () => {
   const email  = document.getElementById('newMemberEmailAdmin')?.value.trim().toLowerCase();
   const teamId = document.getElementById('memberTeamSelect')?.value;
   if (!email || !email.includes('@')) return toast('Valid email required', true);
-  if (!teamId) return toast('Select a team', true);
+  if (!teamId) return toast('Select a team first', true);
   try {
     const k = safeKey(email);
-    await set(ref(db, `roles/${k}`), {role:ROLES.MEMBER, email, teamId, updatedAt:Date.now()});
-    await set(ref(db, `teams/${teamId}/members/${k}`), {email, addedAt:Date.now()});
-    toast(`✅ ${email} added to team`);
+
+    // 1. Role set karo
+    await setDoc(doc(db, 'roles', k), {
+      role: ROLES.MEMBER, email, teamId, updatedAt: Date.now()
+    });
+
+    // 2. Team doc mein member add karo (dot notation se map field update)
+    await updateDoc(doc(db, 'teams', teamId), {
+      [`members.${k}`]: { email, role: 'member', addedAt: Date.now() }
+    });
+
+    // 3. User register karo
+    const userSnap = await getDoc(doc(db, 'users', k));
+    if (!userSnap.exists()) {
+      await setDoc(doc(db, 'users', k), {
+        name: email.split('@')[0], email, photo: '',
+        role: 'member', teamId, createdAt: Date.now()
+      });
+    } else {
+      await updateDoc(doc(db, 'users', k), { role: 'member', teamId, updatedAt: Date.now() });
+    }
+
+    toast(`✅ ${email} added as member`);
     document.getElementById('newMemberEmailAdmin').value = '';
-  } catch(e) { toast('Error: '+e.message, true); }
+  } catch(e) { toast('❌ Error: ' + e.message, true); }
 };
 
 window.adminChangeRole = async (email, role) => {
-  await update(ref(db, `roles/${safeKey(email)}`), {role, updatedAt:Date.now()});
+  await updateDoc(doc(db, 'roles', safeKey(email)), {role, updatedAt:Date.now()});
   toast(`Role updated → ${role}`);
 };
 
 window.adminDeleteTeam = async (id, name) => {
   if (!confirm(`Delete team "${name}"?`)) return;
-  await remove(ref(db, `teams/${id}`));
+  await deleteDoc(doc(db, 'teams', id));
   toast('Team deleted');
 };
 
@@ -1111,7 +1173,6 @@ function initAIFloat() {
   if (!getPINHash()) {
     document.getElementById('aiPinSetupPanel').classList.add('show');
   }
-  // Show welcome if already open
 }
 
 window.openAIFloat = () => {
@@ -1151,7 +1212,7 @@ window.resetAIPIN = () => {
   document.getElementById('aiPinSetupPanel').classList.add('show');
 };
 
-window.aiPinKeyDown = (e) => { if(e.key==='Enter') verifyAIPIN(); };
+window.aiPinKeyDown   = (e) => { if(e.key==='Enter') verifyAIPIN(); };
 window.setupPinKeyDown = (e) => { if(e.key==='Enter') setupAIPIN(); };
 
 function openAIChat() {
@@ -1221,8 +1282,11 @@ async function processAI(msg) {
 async function getApiKey() {
   if (cachedApiKey) return cachedApiKey;
   try {
-    const snap = await get(ref(db, 'settings/openaiApiKey'));
-    if (snap.exists()) { cachedApiKey = snap.val(); return cachedApiKey; }
+    const snap = await getDoc(doc(db, 'settings', 'config'));
+    if (snap.exists() && snap.data().openaiApiKey) {
+      cachedApiKey = snap.data().openaiApiKey;
+      return cachedApiKey;
+    }
   } catch(e) {}
   return null;
 }
@@ -1260,18 +1324,29 @@ For general questions respond in clean HTML. Reply in user's language (Hindi/Eng
 async function execAIAction(a, orig) {
   if (a.action === 'note') {
     const content = a.content || orig;
-    await push(ref(db, `notes/${safeKey(currentUser.email)}`), {content, title:content.substring(0,30), category:'', color:'#181c24', createdAt:Date.now(), updatedAt:Date.now(), createdBy:currentUser.email});
+    await addDoc(collection(db, 'notes'), {
+      content, title:content.substring(0,30), category:'', color:'#181c24',
+      ownerKey: safeKey(currentUser.email),
+      createdAt:Date.now(), updatedAt:Date.now(), createdBy:currentUser.email
+    });
     return `✅ <strong>Note saved!</strong><br/>"${content}"<br/>📝 Notes section mein dekho.`;
   }
   if (a.action === 'task') {
     const m = allMembers.find(m => (m.name||'').toLowerCase().includes((a.assigneeName||'').toLowerCase()) || m.email.includes((a.assigneeName||'').toLowerCase()));
     if (!m) return `❌ Member nahi mila: "${a.assigneeName}"<br/>Available: ${allMembers.map(m=>m.name||m.email).join(', ')||'No members'}`;
-    await push(ref(db, 'tasks'), {title:a.title, desc:a.description||'', assigneeEmail:m.email, assigneeName:m.name||m.email, priority:a.priority||'medium', dueDate:a.dueDate||'', status:'pending', teamId:currentTeamId||'', createdAt:Date.now(), createdBy:currentUser.email, source:'ai'});
+    await addDoc(collection(db, 'tasks'), {
+      title:a.title, desc:a.description||'', assigneeEmail:m.email, assigneeName:m.name||m.email,
+      priority:a.priority||'medium', dueDate:a.dueDate||'', status:'pending',
+      teamId:currentTeamId||'', createdAt:Date.now(), createdBy:currentUser.email, source:'ai'
+    });
     return `✅ <strong>Task assigned!</strong><br/>📋 ${a.title}<br/>👤 ${m.name||m.email}<br/>📅 ${a.dueDate||'No date'}<br/>🎯 ${a.priority||'medium'}`;
   }
   if (a.action === 'reminder') {
     const t = Date.now() + ((parseFloat(a.hoursFromNow)||1)*3600000);
-    await push(ref(db, 'reminders'), {title:a.title, time:t, forEmail:'all', status:'pending', createdAt:Date.now(), createdBy:currentUser.email});
+    await addDoc(collection(db, 'reminders'), {
+      title:a.title, time:t, forEmail:'all', status:'pending',
+      createdAt:Date.now(), createdBy:currentUser.email
+    });
     return `✅ <strong>Reminder set!</strong><br/>🔔 "${a.title}"<br/>⏰ ${new Date(t).toLocaleString()}`;
   }
   return '🤔 Unknown action';
@@ -1298,7 +1373,7 @@ window.saveApiKey = async () => {
   const key = document.getElementById('apiKeyInput')?.value.trim();
   if (!key) return toast('API Key empty', true);
   if (!key.startsWith('sk-')) return toast('Invalid key — must start with sk-', true);
-  await set(ref(db, 'settings/openaiApiKey'), key);
+  await setDoc(doc(db, 'settings', 'config'), {openaiApiKey: key}, {merge: true});
   cachedApiKey = key;
   loadApiKeyStatus();
   toast('✅ API Key saved!');
@@ -1307,7 +1382,7 @@ window.saveApiKey = async () => {
 
 window.clearApiKey = async () => {
   if (!confirm('Remove API Key?')) return;
-  await remove(ref(db, 'settings/openaiApiKey'));
+  await updateDoc(doc(db, 'settings', 'config'), {openaiApiKey: ''});
   cachedApiKey = null;
   loadApiKeyStatus();
   toast('API Key removed');
