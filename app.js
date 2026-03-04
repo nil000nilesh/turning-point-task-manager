@@ -957,14 +957,24 @@ function checkReminders() {
 let adminTeams = [], adminUsers = [];
 
 function initAdminModule() {
-  onValue(ref(db, 'users'), snap => {
-    onValue(ref(db, 'roles'), rolesSnap => {
-      const roles = {};
-      if (rolesSnap.exists()) rolesSnap.forEach(c => { roles[c.key] = c.val(); });
-      adminUsers = [];
-      if (snap.exists()) snap.forEach(c => adminUsers.push({id:c.key,...c.val(), role:roles[c.key]?.role||'member'}));
-      renderAdminUserList();
+  let latestUsers = null, latestRoles = null;
+  function mergeAndRender() {
+    if (!latestUsers) return;
+    adminUsers = [];
+    latestUsers.forEach(c => {
+      const role = latestRoles?.[c.key]?.role || 'member';
+      adminUsers.push({id:c.key,...c.val(), role});
     });
+    renderAdminUserList();
+  }
+  onValue(ref(db, 'users'), snap => {
+    latestUsers = snap.exists() ? snap : null;
+    mergeAndRender();
+  });
+  onValue(ref(db, 'roles'), snap => {
+    latestRoles = {};
+    if (snap.exists()) snap.forEach(c => { latestRoles[c.key] = c.val(); });
+    mergeAndRender();
   });
   onValue(ref(db, 'teams'), snap => {
     adminTeams = [];
@@ -985,9 +995,17 @@ window.adminCreateTeam = async () => {
     const teamId = teamRef.key;
     await set(teamRef, {name, leaderEmail:email, createdAt:Date.now()});
     await set(ref(db, `roles/${k}`), {role:ROLES.LEADER, email, teamId, updatedAt:Date.now()});
+    // Register leader as user if not already present
+    const userSnap = await get(ref(db, `users/${k}`));
+    if (!userSnap.exists()) {
+      await set(ref(db, `users/${k}`), {name: email.split('@')[0], email, photo:'', createdAt:Date.now()});
+    }
     toast(`✅ Team "${name}" created!`);
     ['newTeamName','newTeamLeader'].forEach(id => {const e=document.getElementById(id);if(e)e.value='';});
-  } catch(e) { toast('Error: '+e.message, true); }
+  } catch(e) {
+    console.error('adminCreateTeam error:', e);
+    toast('Error: '+e.message, true);
+  }
 };
 
 window.adminAddMember = async () => {
