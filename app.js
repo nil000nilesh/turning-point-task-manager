@@ -27,7 +27,7 @@ const firebaseConfig = {
 };
 
 const ADMIN_EMAIL     = "nil000nilesh@gmail.com";
-const ADMIN_USER_PIN       = "5786";           // Admin User PIN — login Admin User
+const ADMIN_USER_PIN  = "5786";           // Default PIN for Admin user only
 const PIN_EXPIRY_DAYS = 30;              // Monthly reset
 const INACTIVITY_MS   = 5 * 60 * 1000;  // 5 min auto-lock
 const ROLES = { ADMIN:'admin', LEADER:'leader', MEMBER:'member' };
@@ -320,8 +320,7 @@ window._pinAction = async (mode) => {
     }
   } else {
     // Admin bypass
-    if (pin === ADMIN_PIN) { _closePINOverlay(); initApp(); return; }
-    try {
+      try {
       const snap = await getDoc(doc(db,'userPins',safeKey(currentUser.email)));
       if (!snap.exists()) { _pinShake(mode); return; }
       const ok = (await hashPIN(pin)) === snap.data().pinHash;
@@ -346,6 +345,21 @@ function _closePINOverlay() {
   if (o) { o.classList.add('hidden'); setTimeout(()=>o.remove(),300); }
 }
 
+// showPINScreen function mein, setup ke pehle ye add karo:
+if (!snap.exists()) {
+  // Admin ka default PIN auto-set karo
+  if (user.email === ADMIN_EMAIL) {
+    const hash = await hashPIN(ADMIN_USER_PIN);
+    const now = Date.now();
+    await setDoc(doc(db,'userPins',k), {
+      pinHash:hash, email:user.email,
+      setAt:now, expiresAt:now+(PIN_EXPIRY_DAYS*86400000)
+    });
+    showPINOverlay('verify', user);  // Setup screen nahi, directly verify
+  } else {
+    showPINOverlay('setup', user);   // Normal users PIN set karein
+  }
+}
 async function showPINScreen(user) {
   const k = safeKey(user.email);
   try {
@@ -1148,7 +1162,7 @@ window.changePIN=async()=>{
     const k=safeKey(currentUser.email);
     const snap=await getDoc(doc(db,'userPins',k));
     if(!snap.exists())return toast('No PIN found',true);
-    const validOld=(await hashPIN(oldPin))===snap.data().pinHash||oldPin===ADMIN_PIN;
+   const validOld=(await hashPIN(oldPin))===snap.data().pinHash;
     if(!validOld)return toast('❌ Wrong current PIN',true);
     const now=Date.now();
     await setDoc(doc(db,'userPins',k),{pinHash:await hashPIN(newPin),email:currentUser.email,setAt:now,expiresAt:now+(PIN_EXPIRY_DAYS*86400000)});
