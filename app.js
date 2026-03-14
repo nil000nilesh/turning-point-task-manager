@@ -20,10 +20,11 @@ const firebaseConfig = {
   apiKey:            "AIzaSyAP6xYAgWtU8hyuJP2nximxRZRIJnwNgG0",
   authDomain:        "turning-point-task-manager.firebaseapp.com",
   projectId:         "turning-point-task-manager",
+  databaseURL:       "https://turning-point-task-manager-default-rtdb.firebaseio.com",
   storageBucket:     "turning-point-task-manager.firebasestorage.app",
   messagingSenderId: "922397311479",
-  appId:             "1:922397311479:web:0c4ed59ee86331261daef2",
-  measurementId:     "G-BX36LQ0T1J"
+  appId:             "1:922397311479:web:409b33be6ba412d01daef2",
+  measurementId:     "G-N4B2RJM9Z3"
 };
 
 const ADMIN_EMAIL     = "nil000nilesh@gmail.com";
@@ -448,6 +449,49 @@ function timeAgo(ts) {
 function emptyState(icon,text) { return `<div class="empty-state"><div class="empty-icon">${icon}</div><div class="empty-text">${text}</div></div>`; }
 function setEl(id,val) { const el=document.getElementById(id);if(el)el.textContent=val; }
 
+window.shareApp = async () => {
+  const shareData = {
+    title: 'Tarning Point Marketing — Task Manager',
+    text: 'Team aur task management ke liye is app ko use karo.',
+    url: window.location.origin
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      toast('✅ App link shared successfully');
+      return;
+    }
+  } catch (e) {
+    if (e?.name !== 'AbortError') toast('Share cancelled', true);
+    return;
+  }
+
+  const encodedURL = encodeURIComponent(shareData.url);
+  const encodedText = encodeURIComponent(`${shareData.text} ${shareData.url}`);
+  const options = [
+    `WhatsApp: https://wa.me/?text=${encodedText}`,
+    `X / Twitter: https://twitter.com/intent/tweet?text=${encodedText}`,
+    `Facebook: https://www.facebook.com/sharer/sharer.php?u=${encodedURL}`,
+    `Email: mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodedText}`
+  ];
+
+  const choice = prompt(`Share options:\n\n${options.map((o, i) => `${i + 1}. ${o}`).join('\n')}\n\n(1-4 select karo, ya Cancel)`);
+  const idx = Number(choice) - 1;
+  if (idx >= 0 && idx < options.length) {
+    const target = options[idx].split(': ')[1];
+    window.open(target, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(shareData.url);
+    toast('📋 Link copied. Aap manually share kar sakte ho.');
+  } else {
+    toast(`Link copy karo: ${shareData.url}`);
+  }
+};
+
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
@@ -461,7 +505,14 @@ function resetLoginBtn() {
 resetLoginBtn();
 
 getRedirectResult(auth).then(r=>{if(r?.user)console.log('✅ Redirect:',r.user.email);else resetLoginBtn();})
-.catch(e=>{ resetLoginBtn(); const ign=['auth/no-auth-event','auth/null-user','auth/missing-initial-state']; if(!ign.includes(e.code)&&e.code!=='auth/popup-closed-by-user') showLoginError('Login error: '+e.code); });
+.catch(e=>{
+  resetLoginBtn();
+  const ign=['auth/no-auth-event','auth/null-user','auth/missing-initial-state'];
+  if(!ign.includes(e.code)&&e.code!=='auth/popup-closed-by-user') {
+    const msg = buildAuthHelpMessage(e.code, 'Login error: ' + (e.code || 'unknown'));
+    showLoginError(msg);
+  }
+});
 
 function showLoginError(msg) {
   const el=document.getElementById('loginErrorMsg');
@@ -469,22 +520,67 @@ function showLoginError(msg) {
   resetLoginBtn();
 }
 
+function buildAuthHelpMessage(code, fallbackMessage='Login failed') {
+  const host = window.location.hostname;
+  const origin = window.location.origin;
+  if (code === 'auth/unauthorized-domain') {
+    return `❌ Google login blocked for ${host}. Firebase Console → Authentication → Settings → Authorized domains mein ye domains add karo: ${host} + ${origin.replace('https://','')} + vercel preview domain.`;
+  }
+  if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') {
+    return '❌ Firebase Google provider disabled lag raha hai. Authentication → Sign-in method → Google ko enable karo.';
+  }
+  if (code === 'auth/invalid-api-key' || code === 'auth/app-not-authorized') {
+    return '❌ Firebase web config/API key mismatch lag raha hai. Firebase project ke same Web App credentials use karo.';
+  }
+  return fallbackMessage;
+}
+
+function shouldUseRedirectFallback(code) {
+  const redirectCodes = [
+    'auth/popup-blocked',
+    'auth/cancelled-popup-request',
+    'auth/operation-not-supported-in-this-environment',
+    'auth/web-storage-unsupported',
+    'auth/unauthorized-domain'
+  ];
+  return redirectCodes.includes(code);
+}
+
+async function beginRedirectLogin(txtEl) {
+  if(txtEl) txtEl.innerHTML='<strong>Redirecting...</strong><br/><small style="color:#6b7280">Opening Google sign-in page</small>';
+  await signInWithRedirect(auth,provider);
+}
+
 window.loginWithGoogle = async () => {
   const btn=document.getElementById('googleLoginBtn');
   const txt=document.getElementById('googleBtnText');
   const errEl=document.getElementById('loginErrorMsg');
+
   if(errEl) errEl.style.display='none';
   if(btn) btn.disabled=true;
   if(txt) txt.innerHTML='<strong>Signing in...</strong><br/><small style="color:#6b7280">Please wait...</small>';
+
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
-    if(['auth/popup-blocked','auth/cancelled-popup-request'].includes(e.code)) {
-      if(txt) txt.innerHTML='<strong>Redirecting...</strong>';
-      try{await signInWithRedirect(auth,provider);return;}catch(e2){showLoginError('Redirect failed: '+e2.message);}
-    } else if(e.code==='auth/popup-closed-by-user') { resetLoginBtn(); }
-    else if(e.code==='auth/unauthorized-domain') { showLoginError('❌ Domain unauthorized! Firebase Auth → Authorized Domains.'); }
-    else { showLoginError('Login failed: '+(e.message||e.code)); }
+    if (e.code==='auth/popup-closed-by-user') {
+      resetLoginBtn();
+      return;
+    }
+
+    if (shouldUseRedirectFallback(e.code)) {
+      try {
+        await beginRedirectLogin(txt);
+        return;
+      } catch (e2) {
+        const raw2 = e2.message || e2.code || 'Unknown redirect error';
+        showLoginError(buildAuthHelpMessage(e2.code, 'Redirect failed: ' + raw2));
+        return;
+      }
+    }
+
+    const raw = e.message || e.code || 'Unknown error';
+    showLoginError(buildAuthHelpMessage(e.code, 'Login failed: ' + raw));
   }
 };
 
