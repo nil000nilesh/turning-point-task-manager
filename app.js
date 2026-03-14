@@ -505,7 +505,14 @@ function resetLoginBtn() {
 resetLoginBtn();
 
 getRedirectResult(auth).then(r=>{if(r?.user)console.log('✅ Redirect:',r.user.email);else resetLoginBtn();})
-.catch(e=>{ resetLoginBtn(); const ign=['auth/no-auth-event','auth/null-user','auth/missing-initial-state']; if(!ign.includes(e.code)&&e.code!=='auth/popup-closed-by-user') showLoginError('Login error: '+e.code); });
+.catch(e=>{
+  resetLoginBtn();
+  const ign=['auth/no-auth-event','auth/null-user','auth/missing-initial-state'];
+  if(!ign.includes(e.code)&&e.code!=='auth/popup-closed-by-user') {
+    const msg = buildAuthHelpMessage(e.code, 'Login error: ' + (e.code || 'unknown'));
+    showLoginError(msg);
+  }
+});
 
 function showLoginError(msg) {
   const el=document.getElementById('loginErrorMsg');
@@ -528,9 +535,11 @@ window.loginWithGoogle = async () => {
   const btn=document.getElementById('googleLoginBtn');
   const txt=document.getElementById('googleBtnText');
   const errEl=document.getElementById('loginErrorMsg');
+
   if(errEl) errEl.style.display='none';
   if(btn) btn.disabled=true;
   if(txt) txt.innerHTML='<strong>Signing in...</strong><br/><small style="color:#6b7280">Please wait...</small>';
+
   try {
     await signInWithPopup(auth, provider);
   } catch(e) {
