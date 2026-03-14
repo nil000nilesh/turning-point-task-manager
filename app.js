@@ -377,6 +377,8 @@ function showView(name) {
   document.querySelectorAll(`.nav-item[data-view="${name}"]`).forEach(n=>n.classList.add('active'));
   if (name==='settings') loadApiKeyStatus();
   if (name==='dashboard') renderDashboard();
+  // Close mobile sidebar on nav click
+  if(window.innerWidth<=640) { window.closeMobileSidebar?.(); }
 }
 window.showView = showView;
 function formatDate(ts) { if(!ts)return'—'; return new Date(ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); }
@@ -534,9 +536,28 @@ function setupSidebar() {
   const av=document.getElementById('sidebarAvatar');
   if(currentUser.photoURL) av.innerHTML=`<img src="${currentUser.photoURL}"/>`;
   else av.textContent=(currentUser.displayName||'U')[0].toUpperCase();
+  // Sync mobile avatar
+  const mav=document.getElementById('mobileAvatar');
+  if(mav){ if(currentUser.photoURL) mav.innerHTML=`<img src="${currentUser.photoURL}" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/>`;
+  else mav.textContent=(currentUser.displayName||'U')[0].toUpperCase(); }
   document.getElementById('sidebarName').textContent=currentUser.displayName||currentUser.email;
   const dn=document.getElementById('dashName'); if(dn) dn.textContent=(currentUser.displayName||'Leader').split(' ')[0];
 }
+
+// ── Mobile Sidebar Toggle ──
+window.toggleMobileSidebar = () => {
+  const sidebar=document.getElementById('mainSidebar');
+  const overlay=document.getElementById('sidebarOverlay');
+  const ham=document.querySelector('.hamburger');
+  const isOpen=sidebar.classList.contains('mobile-open');
+  if(isOpen){ sidebar.classList.remove('mobile-open'); overlay.classList.remove('show'); ham?.classList.remove('open'); }
+  else { sidebar.classList.add('mobile-open'); overlay.classList.add('show'); ham?.classList.add('open'); }
+};
+window.closeMobileSidebar = () => {
+  document.getElementById('mainSidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebarOverlay')?.classList.remove('show');
+  document.querySelector('.hamburger')?.classList.remove('open');
+};
 function initLeaderModules(){subscribeMembers();subscribeTasks();subscribeClients();subscribeNotes();subscribeReminders();}
 function initMemberModules(){subscribeTasks();subscribeReminders();}
 

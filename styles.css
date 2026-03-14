@@ -74,17 +74,56 @@ body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text)
 .login-trust-badge .tb-icon { font-size:22px; margin-bottom:4px; }
 .login-trust-badge h5 { font-size:11px; font-weight:700; color:#111827; }
 .login-trust-badge p { font-size:10px; color:#9ca3af; }
-.login-right-note { display:flex; align-items:center; gap:6px; margin-top:16px; }
+/* Mobile brand (hidden on desktop) */
+.login-mobile-brand { display:none; align-items:center; gap:12px; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid #e5e7eb; }
+.login-mobile-logo { width:44px; height:44px; background:linear-gradient(145deg,#ff3d37,#ffc931,#fff41f); border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.login-mobile-logo .tp-monogram { font-family:'Syne',sans-serif; font-size:24px; font-weight:800; color:#5a5747; }
+.login-mobile-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; background:linear-gradient(90deg,#ff3c35,#ff9d2f,#ffd700); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.login-mobile-tag { font-family:'Syne',sans-serif; font-size:10px; letter-spacing:4px; color:#ff7045; }
+
+/* Share button — attractive design */
+.btn-share-login { width:100%; margin-top:16px; padding:14px 20px; background:linear-gradient(135deg,#00e5a0,#0099ff); color:#fff; border:none; border-radius:14px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.25s; box-shadow:0 4px 20px rgba(0,229,160,0.35); position:relative; overflow:hidden; }
+.btn-share-login::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,0.15),transparent); }
+.btn-share-login:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,229,160,0.5); }
+.btn-share-login:active { transform:translateY(0); }
+.share-btn-icon { font-size:20px; flex-shrink:0; filter:drop-shadow(0 0 4px rgba(255,255,255,0.5)); }
+.share-btn-text { flex:1; display:flex; flex-direction:column; line-height:1.3; text-align:left; }
+.share-btn-text strong { font-size:14px; font-weight:700; }
+.share-btn-text small { font-size:11px; font-weight:400; opacity:0.85; }
+.share-btn-arrow { font-size:20px; opacity:0.7; }
+
+.login-right-note { display:flex; align-items:center; gap:6px; margin-top:14px; }
 .login-right-note span { font-size:12px; color:#6b7280; }
-.btn-share-login { width:100%; margin-top:12px; padding:12px 20px; background:rgba(0,180,120,0.08); color:#00b478; border:1.5px solid rgba(0,180,120,0.3); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:14px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s; }
-.btn-share-login:hover { background:rgba(0,180,120,0.15); border-color:rgba(0,180,120,0.5); transform:translateY(-1px); }
-.login-powered { text-align:center; margin-top:20px; font-size:12px; color:#9ca3af; }
+.login-powered { text-align:center; margin-top:14px; font-size:12px; color:#9ca3af; }
 .login-powered strong { color:#111827; }
 
 /* ── APP LAYOUT ── */
 #screen-app { flex-direction:row; }
+
+/* Mobile top bar (hidden on desktop) */
+.mobile-topbar { display:none; position:fixed; top:0; left:0; right:0; height:56px; background:var(--surface); border-bottom:1px solid var(--border); z-index:80; align-items:center; padding:0 16px; gap:12px; box-shadow:0 2px 12px rgba(0,0,0,0.3); }
+.hamburger { background:none; border:none; cursor:pointer; padding:6px; display:flex; flex-direction:column; gap:5px; }
+.hamburger span { display:block; width:22px; height:2px; background:var(--text); border-radius:2px; transition:all 0.2s; }
+.hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity:0; }
+.hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+.mobile-topbar-brand { flex:1; font-family:'Syne',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
+.mobile-topbar-brand strong { color:var(--accent); }
+.mobile-topbar-brand span { color:var(--muted); font-size:13px; font-weight:400; }
+.mobile-topbar-right { display:flex; align-items:center; gap:10px; }
+.mobile-share-btn { background:linear-gradient(135deg,rgba(0,229,160,0.2),rgba(0,153,255,0.2)); border:1px solid rgba(0,229,160,0.3); color:var(--accent); border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:all 0.2s; }
+.mobile-share-btn:hover { background:rgba(0,229,160,0.3); }
+.mobile-avatar { width:34px!important; height:34px!important; font-size:14px!important; cursor:pointer; flex-shrink:0; }
+
+/* Sidebar overlay */
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:85; backdrop-filter:blur(2px); }
+.sidebar-overlay.show { display:block; }
+
+/* Sidebar close button (mobile only) */
+.sidebar-close-btn { display:none; }
+
 .sidebar { width:260px; min-height:100vh; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 0; flex-shrink:0; }
-.sidebar-brand { padding:0 20px 20px; border-bottom:1px solid var(--border); }
+.sidebar-brand { padding:0 20px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:auto; }
 .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; color:var(--accent); }
 .sub { font-size:11px; color:var(--muted); margin-top:2px; }
 .sidebar-user { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
@@ -321,11 +360,146 @@ textarea.form-control { resize:vertical; }
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
 
-/* RESPONSIVE */
-@media(max-width:900px){
-  #screen-login { flex-direction:column; }
-  .login-right { width:100%; }
-  .login-stat-row { display:none; }
-  .sidebar { display:none; }
-  .notebook-layout { grid-template-columns:1fr; }
+/* ════════════════════════════════════════
+   RESPONSIVE DESIGN
+   Mobile < 640px | Tablet 640-1024px | Desktop > 1024px
+════════════════════════════════════════ */
+
+/* ── TABLET (641px – 1024px) ── */
+@media(min-width:641px) and (max-width:1024px) {
+  .login-left { padding:40px 36px; }
+  .login-right { width:420px; padding:40px 32px; }
+  .login-right-inner { max-width:340px; }
+  .login-stat-row { gap:16px; margin-top:24px; }
+  .login-features { gap:12px; }
+
+  .sidebar { width:220px; }
+  .main-content { padding:24px 20px; }
+  .stats-row { grid-template-columns:repeat(3,1fr); }
+  #view-dashboard [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr!important; }
+  .form-row { grid-template-columns:1fr 1fr; }
+  .notebook-layout { height:calc(100vh - 160px); }
+  .admin-panel-grid,[style*="grid-template-columns:1fr 1fr;gap:20px"] { grid-template-columns:1fr!important; }
+}
+
+/* ── MOBILE (≤ 640px) ── */
+@media(max-width:640px) {
+  /* ── LOGIN: Single page, no scroll ── */
+  #screen-login { flex-direction:column; min-height:100dvh; }
+  .login-left { display:none; }
+  .login-right {
+    width:100%; min-height:100dvh; padding:0;
+    justify-content:flex-start; background:#f5f7fa;
+    overflow-y:auto;
+  }
+  .login-right-inner {
+    width:100%; max-width:100%; padding:20px 20px 24px;
+    min-height:100dvh;
+    display:flex; flex-direction:column; justify-content:center;
+  }
+  .login-mobile-brand { display:flex; }
+  .login-right-badge { margin-bottom:12px; font-size:10px; }
+  .login-right h2 { font-size:24px; margin-bottom:4px; }
+  .login-right-sub { font-size:13px; margin-bottom:18px; }
+  .btn-google { padding:14px 16px; font-size:14px; }
+  .btn-share-login { margin-top:12px; padding:12px 16px; }
+  .login-divider { margin:14px 0 12px; }
+  .login-trust-badges { gap:8px; }
+  .login-trust-badge { padding:10px 6px; border-radius:10px; }
+  .login-trust-badge .tb-icon { font-size:18px; }
+  .login-trust-badge h5 { font-size:10px; }
+  .login-trust-badge p { font-size:9px; }
+  .login-right-note { margin-top:10px; }
+  .login-powered { margin-top:10px; }
+
+  /* ── APP LAYOUT ── */
+  #screen-app { flex-direction:column; padding-top:56px; }
+
+  /* Show mobile topbar */
+  .mobile-topbar { display:flex; }
+
+  /* Sidebar: drawer from left */
+  .sidebar {
+    position:fixed; top:0; left:0; bottom:0; z-index:90;
+    width:280px; min-height:100dvh;
+    transform:translateX(-100%);
+    transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:4px 0 24px rgba(0,0,0,0.4);
+    padding-top:0; overflow-y:auto;
+  }
+  .sidebar.mobile-open { transform:translateX(0); }
+  .sidebar-close-btn {
+    display:flex; margin-left:auto; background:rgba(255,255,255,0.08);
+    border:none; color:var(--muted); width:28px; height:28px;
+    border-radius:50%; cursor:pointer; align-items:center; justify-content:center; font-size:14px;
+  }
+  .sidebar-brand { display:flex; align-items:center; padding:14px 16px 14px; gap:8px; }
+
+  /* Main content full width */
+  .main-content { padding:16px 14px; min-height:calc(100dvh - 56px); width:100%; }
+
+  /* Page header */
+  .page-header { margin-bottom:16px; gap:8px; }
+  .page-title { font-size:20px; }
+  .btn-share { display:none; } /* hidden in topbar instead */
+
+  /* Stats: 2 columns on mobile */
+  .stats-row { grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:16px; }
+  .stat-card { padding:14px; }
+  .stat-value { font-size:26px; }
+
+  /* Dashboard grid: single column */
+  #view-dashboard [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr!important; }
+
+  /* Forms: single column */
+  .form-row { grid-template-columns:1fr; gap:0; }
+  .card { padding:16px; border-radius:12px; }
+
+  /* Task items */
+  .task-item { padding:12px; gap:10px; }
+  .task-actions { flex-direction:column; gap:4px; }
+  .task-actions .btn-sm { font-size:11px; padding:4px 8px; }
+
+  /* Members grid */
+  .member-grid { grid-template-columns:1fr 1fr; gap:10px; }
+  .member-card { padding:14px; }
+
+  /* Notes: stack vertically */
+  .notebook-layout { grid-template-columns:1fr; height:auto; gap:14px; }
+  .note-editor { height:400px; }
+
+  /* Admin panel */
+  #view-admin [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr!important; gap:16px!important; }
+
+  /* Modals */
+  .modal { padding:20px; border-radius:16px; }
+  .modal-overlay { align-items:flex-end; }
+  .modal { border-radius:20px 20px 0 0; max-height:90dvh; width:100%; max-width:100%; }
+
+  /* Task chat */
+  .task-chat-container { height:340px; }
+  .task-update-grid { grid-template-columns:1fr!important; }
+
+  /* AI Float */
+  #aiFloatChat { width:calc(100vw - 20px); right:10px; bottom:80px; }
+
+  /* Reminder & reminder form */
+  #view-reminders .card { max-width:100%!important; }
+  #view-settings .card { max-width:100%!important; }
+  #view-assign-task .card { max-width:100%!important; }
+
+  /* Progress bar view */
+  #view-my-progress .card { max-width:100%!important; }
+  .stats-row.my-stats { grid-template-columns:repeat(3,1fr); }
+
+  /* Client filter row */
+  #view-clients .card-header { flex-direction:column; align-items:flex-start; gap:8px; }
+
+  /* Toast position */
+  .toast-container { left:10px; right:10px; top:64px; }
+  .toast { max-width:100%; }
+
+  /* Flex end buttons */
+  .flex-end { flex-wrap:wrap; }
+  .flex-end .btn-primary,.flex-end .btn-secondary { flex:1; text-align:center; justify-content:center; }
 }
