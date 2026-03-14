@@ -4,6 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Tarning Point Marketing — Client Desk AI</title>
+<meta name="theme-color" content="#5f6053"/>
+<meta name="description" content="Tarning Point Marketing task manager dashboard for teams and clients."/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="styles.css"/>
 </head>
@@ -15,10 +17,12 @@
 <div id="screen-login" class="screen active">
   <div class="login-left">
     <div class="login-left-brand">
-      <div class="login-left-logo">🎯</div>
+      <div class="login-left-logo" aria-hidden="true">
+        <div class="tp-monogram">T</div>
+      </div>
       <div>
-        <div class="login-left-title">Tarning Point Marketing</div>
-        <div class="login-left-tagline">Client Desk AI</div>
+        <div class="login-left-title">TARNINGPOINT</div>
+        <div class="login-left-tagline">MARKETING</div>
       </div>
     </div>
     <div class="login-hero">
@@ -47,6 +51,7 @@
         <span id="googleBtnText"><strong>Continue with Google</strong><br/><small style="font-weight:400;font-size:11px;color:#6b7280">Secure one-tap sign in</small></span>
         <span class="btn-google-arrow">›</span>
       </button>
+      <div id="loginErrorMsg" class="login-error" style="display:none"></div>
       <div class="login-divider"><span>Trusted &amp; Secure</span></div>
       <div class="login-trust-badges">
         <div class="login-trust-badge"><div class="tb-icon">🔐</div><h5>Encrypted</h5><p>256-bit SSL</p></div>
@@ -94,7 +99,13 @@
   <main class="main-content">
     <!-- DASHBOARD -->
     <div id="view-dashboard" class="view active">
-      <div class="page-header"><div class="page-title">Good day, <span id="dashName">Leader</span> 👋</div><div class="page-sub">Team overview for today</div></div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good day, <span id="dashName">Leader</span> 👋</div>
+          <div class="page-sub">Team overview for today</div>
+        </div>
+        <button class="btn-sm btn-share" onclick="shareApp()" title="Share this app">🔗 Share App</button>
+      </div>
       <div class="stats-row">
         <div class="stat-card"><div class="stat-label">Total Tasks</div><div class="stat-value blue" id="statTotal">0</div></div>
         <div class="stat-card"><div class="stat-label">Completed</div><div class="stat-value green" id="statDone">0</div></div>

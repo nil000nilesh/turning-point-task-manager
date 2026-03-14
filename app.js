@@ -448,6 +448,49 @@ function timeAgo(ts) {
 function emptyState(icon,text) { return `<div class="empty-state"><div class="empty-icon">${icon}</div><div class="empty-text">${text}</div></div>`; }
 function setEl(id,val) { const el=document.getElementById(id);if(el)el.textContent=val; }
 
+window.shareApp = async () => {
+  const shareData = {
+    title: 'Tarning Point Marketing — Task Manager',
+    text: 'Team aur task management ke liye is app ko use karo.',
+    url: window.location.origin
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      toast('✅ App link shared successfully');
+      return;
+    }
+  } catch (e) {
+    if (e?.name !== 'AbortError') toast('Share cancelled', true);
+    return;
+  }
+
+  const encodedURL = encodeURIComponent(shareData.url);
+  const encodedText = encodeURIComponent(`${shareData.text} ${shareData.url}`);
+  const options = [
+    `WhatsApp: https://wa.me/?text=${encodedText}`,
+    `X / Twitter: https://twitter.com/intent/tweet?text=${encodedText}`,
+    `Facebook: https://www.facebook.com/sharer/sharer.php?u=${encodedURL}`,
+    `Email: mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodedText}`
+  ];
+
+  const choice = prompt(`Share options:\n\n${options.map((o, i) => `${i + 1}. ${o}`).join('\n')}\n\n(1-4 select karo, ya Cancel)`);
+  const idx = Number(choice) - 1;
+  if (idx >= 0 && idx < options.length) {
+    const target = options[idx].split(': ')[1];
+    window.open(target, '_blank', 'noopener,noreferrer');
+    return;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(shareData.url);
+    toast('📋 Link copied. Aap manually share kar sakte ho.');
+  } else {
+    toast(`Link copy karo: ${shareData.url}`);
+  }
+};
+
 // ═══════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════
@@ -469,6 +512,17 @@ function showLoginError(msg) {
   resetLoginBtn();
 }
 
+function buildAuthHelpMessage(code, fallbackMessage='Login failed') {
+  const host = window.location.hostname;
+  if (code === 'auth/unauthorized-domain') {
+    return `❌ Domain unauthorized: ${host}. Firebase Console → Authentication → Settings → Authorized domains mein isi domain ko add karein.`;
+  }
+  if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') {
+    return '❌ Google sign-in disabled lag raha hai. Firebase Authentication → Sign-in method mein Google provider enable karein.';
+  }
+  return fallbackMessage;
+}
+
 window.loginWithGoogle = async () => {
   const btn=document.getElementById('googleLoginBtn');
   const txt=document.getElementById('googleBtnText');
@@ -483,8 +537,10 @@ window.loginWithGoogle = async () => {
       if(txt) txt.innerHTML='<strong>Redirecting...</strong>';
       try{await signInWithRedirect(auth,provider);return;}catch(e2){showLoginError('Redirect failed: '+e2.message);}
     } else if(e.code==='auth/popup-closed-by-user') { resetLoginBtn(); }
-    else if(e.code==='auth/unauthorized-domain') { showLoginError('❌ Domain unauthorized! Firebase Auth → Authorized Domains.'); }
-    else { showLoginError('Login failed: '+(e.message||e.code)); }
+    else {
+      const raw = e.message || e.code || 'Unknown error';
+      showLoginError(buildAuthHelpMessage(e.code, 'Login failed: ' + raw));
+    }
   }
 };
 
