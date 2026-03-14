@@ -10,7 +10,7 @@ import { getAuth, GoogleAuthProvider,
          getRedirectResult, onAuthStateChanged,
          signOut }                      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getDatabase, ref, set, get, push,
-         onValue, update, remove,
+         onValue, onChildAdded, update, remove,
          query, orderByChild, equalTo }
                                         from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -46,6 +46,8 @@ let currentTeamId = null;
 let allTasks=[], allMembers=[], allClients=[], allNotes=[], allReminders=[];
 let currentTaskId=null, viewingClientId=null, activeNoteId=null;
 let cachedApiKey=null, tasksFilter='all';
+let _chatNotifySet=new Set(), _knownTaskIds=new Set(), _appStartTime=Date.now();
+let _taskChatUnsubscribe=null;
 let _inactivityTimer=null;
 let _pinBuffer={ setup:'', verify:'' };
 
@@ -529,6 +531,7 @@ function initApp() {
   initAIFloat();
   setInterval(checkReminders, 60000);
   setupInactivityListeners();
+  setupLiveNotifications();
   console.log('✅ App ready');
 }
 
@@ -560,6 +563,65 @@ window.closeMobileSidebar = () => {
 };
 function initLeaderModules(){subscribeMembers();subscribeTasks();subscribeClients();subscribeNotes();subscribeReminders();}
 function initMemberModules(){subscribeTasks();subscribeReminders();}
+
+// ═══════════════════════════════════════════════════════
+//  BROWSER PUSH NOTIFICATIONS
+// ═══════════════════════════════════════════════════════
+function notifyBrowser(title, body, tag='tps-notify'){
+  if(Notification.permission!=='granted') return;
+  try {
+    const n=new Notification(title, {body:body?.substring(0,100)||'', icon:'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg', tag, badge:'', vibrate:[200,100,200], requireInteraction:false, silent:false });
+    n.onclick=()=>{ window.focus(); n.close(); };
+    setTimeout(()=>n.close(), 8000);
+  } catch(e){}
+}
+
+function setupTaskChatNotifications(){
+  allTasks.forEach(t=>{
+    if(_chatNotifySet.has(t.id)) return;
+    const isMine = t.assigneeEmail===currentUser.email || t.createdBy===currentUser.email;
+    if(!isMine) return;
+    _chatNotifySet.add(t.id);
+    const notifyAfter = Date.now();
+    onChildAdded(ref(db,`taskChats/${t.id}`), snap=>{
+      const msg=snap.val();
+      if(!msg || msg.by===currentUser.email || msg.ts<=notifyAfter) return;
+      const sender = msg.name||msg.by.split('@')[0];
+      const taskTitle = t.title?.substring(0,40)||'Task';
+      notifyBrowser(`💬 ${sender}: "${taskTitle}"`, msg.text, `chat-${t.id}`);
+      toast(`💬 <strong>${sender}</strong>: ${msg.text?.substring(0,60)}`);
+    });
+  });
+}
+
+// ── Self Task Creation (Members + Leaders for themselves) ──
+window.createMyTask = async () => {
+  const title=document.getElementById('myTaskTitle')?.value.trim();
+  const desc=document.getElementById('myTaskDesc')?.value.trim();
+  const priority=document.getElementById('myTaskPriority')?.value||'medium';
+  const dueDate=document.getElementById('myTaskDue')?.value;
+  if(!title) return toast('Task title required',true);
+  try {
+    await dbPush('tasks',{title,desc:desc||'',assigneeEmail:currentUser.email,assigneeName:currentUser.displayName||currentUser.email,priority,dueDate:dueDate||'',status:'pending',teamId:currentTeamId||'',createdAt:Date.now(),createdBy:currentUser.email,createdByName:currentUser.displayName||currentUser.email,source:'self'});
+    toast('✅ Task added!');
+    ['myTaskTitle','myTaskDesc','myTaskDue'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  } catch(e){toast('Error: '+e.message,true);}
+};
+
+// ── Self Reminder Creation (Members) ──
+window.createMyReminder = async () => {
+  const title=document.getElementById('myRemTitle')?.value.trim();
+  const timeVal=document.getElementById('myRemTime')?.value;
+  const forVal=document.getElementById('myRemFor')?.value||'self';
+  if(!title||!timeVal) return toast('Title aur time dono zaroori hain',true);
+  const forEmail = forVal==='all' ? 'all' : currentUser.email;
+  try {
+    await dbPush('reminders',{title,time:new Date(timeVal).getTime(),forEmail,status:'pending',teamId:currentTeamId||'',createdAt:Date.now(),createdBy:currentUser.email,createdByName:currentUser.displayName||currentUser.email});
+    toast('🔔 Reminder set!');
+    document.getElementById('myRemTitle').value='';
+    document.getElementById('myRemTime').value='';
+  } catch(e){toast('Error: '+e.message,true);}
+};
 
 // ═══════════════════════════════════════════════════════
 //  MEMBERS MODULE (Realtime Database)
@@ -624,10 +686,23 @@ function subscribeTasks(){
     const raw = [];
     const obj = snap.val() || {};
     Object.entries(obj).forEach(([k,v]) => raw.push({...v, id:k}));
-    if(currentRole===ROLES.MEMBER) allTasks=raw.filter(t=>t.assigneeEmail===currentUser.email);
+    if(currentRole===ROLES.MEMBER) allTasks=raw.filter(t=>t.assigneeEmail===currentUser.email||t.createdBy===currentUser.email);
     else if(currentRole===ROLES.LEADER) allTasks=raw.filter(t=>t.teamId===currentTeamId||t.createdBy===currentUser.email);
     else allTasks=raw;
+
+    // Notify on new task assignment
+    allTasks.forEach(t=>{
+      if(!_knownTaskIds.has(t.id)){
+        if(t.assigneeEmail===currentUser.email && t.createdBy!==currentUser.email && t.createdAt>_appStartTime){
+          notifyBrowser(`📋 Naya Task Assign Hua!`, `"${t.title}" — by ${t.createdByName||t.createdBy}`, `task-${t.id}`);
+          toast(`📋 New task: <strong>${t.title}</strong>`);
+        }
+        _knownTaskIds.add(t.id);
+      }
+    });
+
     renderAllTasksList(); renderMyTasks(); renderRecentTasks(); updateTaskBadge(); renderDashboard(); renderMyProgress();
+    setupTaskChatNotifications();
   });
 }
 
@@ -733,28 +808,73 @@ window.openTaskUpdate = (id) => {
   const t=allTasks.find(t=>t.id===id); if(!t) return;
   document.getElementById('taskUpdateTitle').textContent=t.title||'Task';
   document.getElementById('taskUpdateStatus').value=t.status||'pending';
-  const msgs=document.getElementById('taskChatMessages'); if(msgs) msgs.innerHTML='';
-  onValue(ref(db,`taskChats/${id}`), snap => {
+  const asgn=document.getElementById('taskUpdateAssignee');
+  if(asgn) asgn.textContent='👤 '+(t.assigneeName||t.assigneeEmail||'—');
+  const dueEl=document.getElementById('taskUpdateDue');
+  if(dueEl) dueEl.textContent=t.dueDate?'📅 '+t.dueDate:'';
+  const cby=document.getElementById('taskChatCreatedBy');
+  if(cby) cby.textContent=t.createdByName?'Created by '+t.createdByName:'';
+  const msgs=document.getElementById('taskChatMessages');
+  if(msgs) msgs.innerHTML='<div class="chat-empty-state"><div style="font-size:32px">💬</div><div>Loading...</div></div>';
+
+  // Unsubscribe previous listener
+  if(_taskChatUnsubscribe){ _taskChatUnsubscribe(); _taskChatUnsubscribe=null; }
+
+  const unsub=onValue(ref(db,`taskChats/${id}`), snap => {
     if(!msgs) return;
     const obj=snap.val()||{};
     const chats=Object.values(obj).sort((a,b)=>a.ts-b.ts);
-    msgs.innerHTML=chats.map(c=>`<div class="chat-msg${c.by===currentUser.email?' mine':''}"><div class="chat-bubble">${c.text}</div><div class="chat-meta">${c.name||c.by} · ${formatDateTime(c.ts)}</div></div>`).join('');
+    if(!chats.length){
+      msgs.innerHTML='<div class="chat-empty-state"><div style="font-size:32px">💬</div><div>Yahan conversation shuru karo</div><div style="font-size:11px;margin-top:4px">Task update, sawaal ya progress share karo</div></div>';
+      return;
+    }
+    msgs.innerHTML=chats.map(c=>{
+      const isMe=c.by===currentUser.email;
+      const initials=(c.name||c.by||'?')[0].toUpperCase();
+      return `<div class="task-chat-msg-wrap ${isMe?'mine':'theirs'}">
+        ${!isMe?`<div class="chat-avatar-sm">${initials}</div>`:''}
+        <div class="chat-msg-inner">
+          <div class="chat-meta-name">${isMe?'Aap':c.name||c.by.split('@')[0]}</div>
+          <div class="chat-bubble">${c.text.replace(/\n/g,'<br/>')}</div>
+          <div class="chat-meta-time">${formatDateTime(c.ts)}</div>
+        </div>
+        ${isMe?`<div class="chat-avatar-sm me">${initials}</div>`:''}
+      </div>`;
+    }).join('');
     msgs.scrollTop=msgs.scrollHeight;
   });
-  document.getElementById('view-task-update')?.classList.add('active');
+  _taskChatUnsubscribe = unsub;
   openModal('taskUpdateModal');
+};
+
+window.closeTaskChat = () => {
+  closeModal('taskUpdateModal');
+  if(_taskChatUnsubscribe){ _taskChatUnsubscribe(); _taskChatUnsubscribe=null; }
+};
+
+window.sendTaskChat = async () => {
+  const input=document.getElementById('taskChatInput');
+  const text=input?.value.trim(); if(!text||!currentTaskId) return;
+  input.value='';
+  const msgData = {text, by:currentUser.email, name:currentUser.displayName||'', ts:Date.now()};
+  await dbPush(`taskChats/${currentTaskId}`, msgData);
+  // Notify the other party
+  const task=allTasks.find(t=>t.id===currentTaskId);
+  if(task){
+    const notifyEmail = currentUser.email===task.assigneeEmail ? task.createdBy : task.assigneeEmail;
+    if(notifyEmail && notifyEmail!==currentUser.email){
+      await dbPush(`notifications/${safeKey(notifyEmail)}`,{
+        type:'chat', taskId:currentTaskId, taskTitle:task.title,
+        from:currentUser.displayName||currentUser.email, text, ts:Date.now(), read:false
+      });
+    }
+  }
 };
 window.updateTaskStatus = async () => {
   const s=document.getElementById('taskUpdateStatus')?.value;
   if(!currentTaskId||!s) return;
   await dbUpdate(`tasks/${currentTaskId}`, {status:s, updatedAt:Date.now()});
   toast('Status updated');
-};
-window.sendTaskChat = async () => {
-  const input=document.getElementById('taskChatInput');
-  const text=input?.value.trim(); if(!text||!currentTaskId) return;
-  input.value='';
-  await dbPush(`taskChats/${currentTaskId}`, {text, by:currentUser.email, name:currentUser.displayName||'', ts:Date.now()});
 };
 window.taskChatKeyDown = (e) => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendTaskChat();} };
 
@@ -951,8 +1071,12 @@ function subscribeReminders(){
     const obj=snap.val()||{};
     const raw=Object.entries(obj).map(([k,v])=>({...v,id:k}));
     if(currentRole===ROLES.ADMIN) allReminders=raw;
-    else if(currentRole===ROLES.LEADER) allReminders=raw.filter(r=>r.teamId===currentTeamId);
-    else allReminders=raw.filter(r=>r.forEmail===currentUser.email||(r.forEmail==='all'&&r.teamId===currentTeamId));
+    else if(currentRole===ROLES.LEADER) allReminders=raw.filter(r=>r.teamId===currentTeamId||r.createdBy===currentUser.email);
+    else allReminders=raw.filter(r=>
+      r.forEmail===currentUser.email ||
+      r.createdBy===currentUser.email ||
+      (r.forEmail==='all'&&r.teamId===currentTeamId)
+    );
     renderReminders(); renderMyReminders(); renderDashReminders(); updateReminderBadge();
   });
 }
@@ -1006,15 +1130,23 @@ function checkReminders(){
   const now=Date.now();
   allReminders.forEach(r=>{
     if(r.status==='pending'&&r.time<=now&&r.time>now-70000){
-      toast('🔔 Reminder: '+r.title);
-      if(Notification.permission==='granted') {
-        new Notification('🔔 TPS Reminder', {
-          body: r.title,
-          icon: '/favicon.ico',
-          tag: r.id   // duplicate avoid karo
-        });
-      }
+      toast(`🔔 <strong>Reminder:</strong> ${r.title}`);
+      notifyBrowser('🔔 TPS Reminder — Tarningpoint', r.title, `rem-${r.id}`);
     }
+  });
+}
+
+// Live notifications watcher (task chat messages from others)
+function setupLiveNotifications(){
+  onChildAdded(ref(db,`notifications/${safeKey(currentUser.email)}`), snap=>{
+    const n=snap.val(); if(!n||n.read) return;
+    if(n.ts<=_appStartTime) return; // purane skip karo
+    if(n.type==='chat'){
+      notifyBrowser(`💬 ${n.from}: "${n.taskTitle}"`, n.text, `notif-${snap.key}`);
+      toast(`💬 <strong>${n.from}</strong> ne task pe message bheja: ${n.text?.substring(0,50)}`);
+    }
+    // Mark read
+    update(ref(db,`notifications/${safeKey(currentUser.email)}/${snap.key}`),{read:true}).catch(()=>{});
   });
 }
 
@@ -1089,65 +1221,132 @@ async function execAIAction(a,orig){
   if(a.action==='reminder'){ const t=Date.now()+((parseFloat(a.hoursFromNow)||1)*3600000); await dbPush('reminders',{title:a.title,time:t,forEmail:'all',status:'pending',createdAt:Date.now(),createdBy:currentUser.email}); return`✅ <strong>Reminder!</strong> 🔔 "${a.title}" ⏰ ${new Date(t).toLocaleString()}`; }
   return '🤔 Unknown action';
 }
+// ── Hindi/Hinglish Time Parser ──
+function parseHindiTime(msg){
+  const l=msg.toLowerCase();
+  const now=new Date();
+  let d=new Date(now);
+  if(l.includes('kal ')||l.includes('tomorrow')) d.setDate(d.getDate()+1);
+  else if(l.includes('parso')) d.setDate(d.getDate()+2);
+
+  let hour=null, min=0;
+  // "6 baje", "6:30 baje", "6 bajey"
+  const bajeM=l.match(/(\d{1,2})(?::(\d{2}))?\s*baj/);
+  if(bajeM){ hour=parseInt(bajeM[1]); min=bajeM[2]?parseInt(bajeM[2]):0; }
+  // "6 pm / am"
+  const pmM=l.match(/(\d{1,2})(?::(\d{2}))?\s*pm/);
+  if(pmM){ hour=parseInt(pmM[1])+(parseInt(pmM[1])<12?12:0); min=pmM[2]?parseInt(pmM[2]):0; }
+  const amM=l.match(/(\d{1,2})(?::(\d{2}))?\s*am/);
+  if(amM){ hour=parseInt(amM[1])%12; min=amM[2]?parseInt(amM[2]):0; }
+
+  if(hour!==null){
+    // Context clue for AM/PM if not already set by pm/am keyword
+    if(!pmM&&!amM){
+      if(l.includes('subah')||l.includes('morning')){if(hour>=12)hour-=12;}
+      else if(l.includes('sham')||l.includes('shaam')||l.includes('evening')){if(hour<12)hour+=12;}
+      else if(l.includes('raat')||l.includes('night')){if(hour<12&&hour!==0)hour+=12;}
+      else { if(hour>=1&&hour<=6) hour+=12; } // 1-6 baje = likely afternoon/evening
+    }
+    d.setHours(hour,min,0,0);
+    if(d.getTime()<Date.now()&&!l.includes('kal')&&!l.includes('parso')) d.setDate(d.getDate()+1);
+  } else {
+    d=new Date(Date.now()+3600000); // default 1 hour from now
+  }
+  return d.getTime();
+}
+
+// ── Extract clean title from Hindi message ──
+function extractCleanTitle(msg){
+  let t=msg;
+  t=t.replace(/\bmujhe\b|\bmere liye\b|\bkhud ke liye\b/gi,'');
+  t=t.replace(/\b(aaj|kal|parso|tomorrow|subah|sham|shaam|raat|morning|evening|night)\b/gi,'');
+  t=t.replace(/\d{1,2}(?::\d{2})?\s*(?:baj[eay]*|pm|am)/gi,'');
+  t=t.replace(/\b(reminder|yaad|set karo|karna hai|karni hai|chahiye|lagao|dena hai|lena hai)\b/gi,'');
+  t=t.replace(/\s+/g,' ').trim();
+  if(t.length<3) t=msg.substring(0,60);
+  return t.substring(0,80);
+}
+
 async function localAI(msg){
   const l = msg.toLowerCase();
   const isLeaderOrAdmin = currentRole===ROLES.ADMIN||currentRole===ROLES.LEADER;
 
-  // Status / report
-  if(l.includes('status')||l.includes('report')||l.includes('kitne')||l.includes('summary')){
-    const done=allTasks.filter(t=>t.status==='done').length;
-    const inprog=allTasks.filter(t=>t.status==='inprogress').length;
-    const pending=allTasks.filter(t=>t.status==='pending').length;
-    return`📊 <strong>Team Status</strong><br/>Total: ${allTasks.length} | ✅ Done: ${done} | 🔄 In Progress: ${inprog} | ⏳ Pending: ${pending}<br/>Clients: ${allClients.length} | Members: ${allMembers.length}`;
+  // ── STATUS / REPORT ──
+  if(l.includes('status')||l.includes('report')||l.includes('kitne')||l.includes('summary')||l.includes('dikhao task')||l.includes('mera task')){
+    const myTasks=allTasks.filter(t=>t.assigneeEmail===currentUser.email||t.createdBy===currentUser.email);
+    const done=myTasks.filter(t=>t.status==='done').length;
+    const pending=myTasks.filter(t=>t.status==='pending').length;
+    const inprog=myTasks.filter(t=>t.status==='inprogress').length;
+    if(isLeaderOrAdmin){
+      const tdone=allTasks.filter(t=>t.status==='done').length;
+      return`📊 <strong>Team Status</strong><br/>Total Tasks: ${allTasks.length} | ✅ Done: ${tdone} | 🔄 In Progress: ${allTasks.filter(t=>t.status==='inprogress').length} | ⏳ Pending: ${allTasks.filter(t=>t.status==='pending').length}<br/>👥 Members: ${allMembers.length} | 🏢 Clients: ${allClients.length}<br/><br/>📋 <strong>Aapke Tasks: ${myTasks.length}</strong> (Done: ${done}, Pending: ${pending})`;
+    }
+    return`📊 <strong>Aapke Tasks</strong><br/>Total: ${myTasks.length} | ✅ Done: ${done} | 🔄 In Progress: ${inprog} | ⏳ Pending: ${pending}`;
   }
 
-  // Members list
-  if((l.includes('member')||l.includes('team'))&&(l.includes('list')||l.includes('dikhao')||l.includes('show')||l.includes('kaun'))){
-    if(!allMembers.length) return`👥 Koi member nahi mila. Pehle member add karo.`;
-    return`👥 <strong>Team Members (${allMembers.length})</strong><br/>${allMembers.map((m,i)=>`${i+1}. ${m.name||m.email} <span style="color:var(--muted);font-size:11px">(${m.role})</span>`).join('<br/>')}`;
+  // ── MEMBERS LIST ──
+  if((l.includes('member')||l.includes('team'))&&(l.includes('list')||l.includes('dikhao')||l.includes('kaun')||l.includes('show'))){
+    if(!allMembers.length) return`👥 Koi member nahi mila abhi.`;
+    return`👥 <strong>Team Members (${allMembers.length})</strong><br/>${allMembers.map((m,i)=>`${i+1}. ${m.name||m.email} <small style="color:var(--muted)">(${m.role})</small>`).join('<br/>')}`;
   }
 
-  // Task assignment (leader/admin only)
-  if(isLeaderOrAdmin && (l.includes('task')||l.includes('assign')||l.includes('karo')||l.includes('do '))){
-    // Try to find member name in message
-    const foundMember = allMembers.find(m=>{
+  // ── REMINDER (detect by keywords or natural time expression) ──
+  const isReminderCmd = l.includes('reminder')||l.includes('yaad')||l.includes('yaad dilao')||l.includes('alert')||
+    (l.includes('baje')&&(l.includes('lena')||l.includes('karna')||l.includes('milna')||l.includes('payment')||l.includes('call')||l.includes('meeting')||l.includes('aaj')||l.includes('kal')));
+
+  if(isReminderCmd){
+    const ts=parseHindiTime(msg);
+    const title=extractCleanTitle(msg);
+    await dbPush('reminders',{title,time:ts,forEmail:currentUser.email,status:'pending',teamId:currentTeamId||'',createdAt:Date.now(),createdBy:currentUser.email,createdByName:currentUser.displayName||currentUser.email});
+    return`✅ <strong>Reminder Set!</strong><br/>🔔 <strong>${title}</strong><br/>⏰ ${new Date(ts).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}<br/><small>Browser notification milegi jab time aayega!</small>`;
+  }
+
+  // ── SELF TASK (mujhe karna hai / khud ke liye task) ──
+  const isSelfTask = l.includes('mujhe')&&(l.includes('karna')||l.includes('karni')||l.includes('task')||l.includes('lena')||l.includes('dena')||l.includes('baat'));
+  if(isSelfTask){
+    const title=extractCleanTitle(msg);
+    let priority='medium';
+    if(l.includes('urgent')||l.includes('important')||l.includes('zaruri')) priority='high';
+    await dbPush('tasks',{title,desc:'',assigneeEmail:currentUser.email,assigneeName:currentUser.displayName||currentUser.email,priority,dueDate:'',status:'pending',teamId:currentTeamId||'',createdAt:Date.now(),createdBy:currentUser.email,createdByName:currentUser.displayName||currentUser.email,source:'ai-self'});
+    return`✅ <strong>Task Add Ho Gaya!</strong><br/>📋 <strong>${title}</strong><br/>👤 Assignee: Aap<br/>🚨 Priority: ${priority}`;
+  }
+
+  // ── TASK ASSIGNMENT (leader/admin) ──
+  if(isLeaderOrAdmin && (l.includes('task')||l.includes('assign')||l.includes('ko karo')||l.includes('ko de')||l.includes('ko task'))){
+    const foundMember=allMembers.find(m=>{
       const name=(m.name||'').toLowerCase();
-      const email=(m.email||'').toLowerCase().split('@')[0];
-      return name && (l.includes(name)||l.includes(email));
+      const uname=(m.email||'').toLowerCase().split('@')[0];
+      return (name&&l.includes(name))||(uname&&l.includes(uname));
     });
     if(!foundMember){
-      const memberNames = allMembers.length ? allMembers.map(m=>m.name||m.email).join(', ') : 'koi nahi';
-      return`❌ <strong>Member ka naam nahi mila.</strong><br/>Available members: ${memberNames}<br/><br/>Format: "<em>Rahul ko task do: printer install, due 30 June, high priority</em>"`;
+      const names=allMembers.length?allMembers.map(m=>m.name||m.email).join(', '):'koi nahi';
+      return`❌ <strong>Member ka naam nahi mila.</strong><br/>Available: ${names}<br/><br/>💡 Format: <em>"Rahul ko task do: printer install, due 30 June"</em>`;
     }
-    // Extract task title after colon or "task:" or "ko task"
-    let title = '';
-    const colonIdx = msg.indexOf(':');
-    if(colonIdx>-1) title=msg.substring(colonIdx+1).trim().split(',')[0].trim();
-    if(!title){
-      const koTaskIdx = l.indexOf('ko task');
-      if(koTaskIdx>-1) title=msg.substring(koTaskIdx+7).replace(/assign|karo|do|kar/gi,'').trim().split(',')[0].trim();
-    }
-    if(!title) return`❌ Task title nahi mila.<br/>Format: "<em>${foundMember.name||foundMember.email} ko task do: <strong>task title yahan</strong>, due 30 June</em>"`;
+    let title='';
+    const ci=msg.indexOf(':');
+    if(ci>-1) title=msg.substring(ci+1).trim().split(',')[0].trim();
+    if(!title){ const ki=l.indexOf('ko task'); if(ki>-1) title=msg.substring(ki+7).replace(/assign|karo|do|kar/gi,'').trim().split(',')[0].trim(); }
+    if(!title) return`❌ Task title nahi mila.<br/>Format: <em>"${foundMember.name||foundMember.email} ko task do: <strong>title yahan</strong>"</em>`;
 
-    // Extract due date
     let dueDate='';
-    const dateMatch=msg.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)/i);
-    if(dateMatch){
-      const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12,january:1,february:2,march:3,april:4,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
-      const day=parseInt(dateMatch[1]); const mon=months[dateMatch[2].substring(0,3).toLowerCase()];
-      if(mon){ const yr=new Date().getFullYear(); dueDate=`${yr}-${String(mon).padStart(2,'0')}-${String(day).padStart(2,'0')}`; }
-    }
-
-    // Extract priority
+    const dm=msg.match(/(\d{1,2})\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i);
+    if(dm){ const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12}; const mn=months[dm[2].substring(0,3).toLowerCase()]; if(mn) dueDate=`${new Date().getFullYear()}-${String(mn).padStart(2,'0')}-${String(parseInt(dm[1])).padStart(2,'0')}`; }
     let priority='medium';
-    if(l.includes('high')||l.includes('urgent')||l.includes('important')) priority='high';
-    else if(l.includes('low')||l.includes('kam')) priority='low';
+    if(l.includes('high')||l.includes('urgent')) priority='high';
+    else if(l.includes('low')) priority='low';
 
     await dbPush('tasks',{title,desc:'',assigneeEmail:foundMember.email,assigneeName:foundMember.name||foundMember.email,priority,dueDate,status:'pending',teamId:currentTeamId||'',createdAt:Date.now(),createdBy:currentUser.email,createdByName:currentUser.displayName||currentUser.email,source:'ai-chat'});
-    return`✅ <strong>Task Assign Ho Gaya!</strong><br/>📋 <strong>${title}</strong><br/>👤 Assignee: ${foundMember.name||foundMember.email}<br/>🚨 Priority: ${priority}${dueDate?`<br/>📅 Due: ${dueDate}`:''}`;
+    // Notify assignee
+    await dbPush(`notifications/${safeKey(foundMember.email)}`,{type:'task',taskTitle:title,from:currentUser.displayName||currentUser.email,ts:Date.now(),read:false});
+    return`✅ <strong>Task Assign Ho Gaya!</strong><br/>📋 ${title}<br/>👤 ${foundMember.name||foundMember.email}<br/>🚨 Priority: ${priority}${dueDate?`<br/>📅 Due: ${dueDate}`:''}`;
   }
 
-  return`🤔 Samajh nahi aaya: "${msg.substring(0,50)}"<br/><br/><small>💡 Try: "members dikhao", "team status", ya "Rahul ko task do: title"<br/>Ya Settings → OpenAI API Key add karo for full AI!</small>`;
+  // ── HELP ──
+  if(l.includes('help')||l.includes('kya kar')||l.includes('commands')){
+    return getWelcomeMsg();
+  }
+
+  return`🤔 <strong>Samajh nahi aaya:</strong> "${msg.substring(0,50)}"<br/><br/>💡 <strong>Try karo:</strong><br/>• "Mujhe aaj 6 baje meeting hai" → Reminder set hoga<br/>• "Mujhe client ka payment lena hai kal 3 baje" → Reminder<br/>• "Team status dikhao" → Report<br/>• "Members dikhao" → Team list<br/>• "Rahul ko task do: kaam karna" → Task assign<br/><small style="color:var(--muted)">Ya Settings → OpenAI API Key add karo!</small>`;
 }
 
 // ── API Key & Settings ──

@@ -337,16 +337,42 @@ textarea.form-control { resize:vertical; }
 .team-member-chip { background:rgba(0,229,160,0.1); color:var(--accent); font-size:11px; padding:3px 10px; border-radius:20px; }
 
 /* TASK CHAT MODAL */
-.task-chat-container { display:flex; flex-direction:column; height:400px; }
-.task-chat-messages { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
-.task-chat-msg { display:flex; flex-direction:column; max-width:80%; }
-.task-chat-msg.mine { align-self:flex-end; align-items:flex-end; }
-.chat-msg-meta { font-size:10px; color:var(--muted); margin-bottom:3px; }
-.chat-bubble { background:var(--surface2); border-radius:12px; padding:8px 12px; font-size:13px; line-height:1.5; }
-.task-chat-msg.mine .chat-bubble { background:rgba(0,229,160,0.12); color:var(--accent); }
+.task-chat-modal { padding:0!important; overflow:hidden!important; max-width:580px; display:flex; flex-direction:column; max-height:88vh; }
+.task-chat-header { padding:16px 20px 12px; background:linear-gradient(135deg,var(--surface2),rgba(0,229,160,0.04)); border-bottom:1px solid var(--border); flex-shrink:0; }
+.task-chat-header-top { display:flex; align-items:flex-start; gap:12px; margin-bottom:10px; }
+.task-chat-icon { font-size:26px; flex-shrink:0; }
+.task-chat-meta { flex:1; }
+.task-chat-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; line-height:1.3; margin-bottom:4px; }
+.task-chat-sub { display:flex; gap:10px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+.tcu-assignee { color:var(--accent2); }
+.tcu-due { color:var(--leader); }
+.task-status-bar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.task-status-select { width:auto!important; padding:4px 10px!important; font-size:12px!important; display:inline-block!important; }
+.task-chat-created { font-size:11px; color:var(--muted); margin-left:auto; }
+
+.task-chat-container { display:flex; flex-direction:column; flex:1; min-height:0; }
+.task-chat-messages { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; min-height:280px; max-height:360px; }
+
+/* New chat bubble design */
+.task-chat-msg-wrap { display:flex; align-items:flex-end; gap:8px; max-width:85%; }
+.task-chat-msg-wrap.mine { align-self:flex-end; flex-direction:row-reverse; }
+.task-chat-msg-wrap.theirs { align-self:flex-start; }
+.chat-avatar-sm { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--accent2),#0056e0); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; color:#fff; }
+.chat-avatar-sm.me { background:linear-gradient(135deg,var(--accent),#00c97a); color:#000; }
+.chat-msg-inner { display:flex; flex-direction:column; }
+.task-chat-msg-wrap.mine .chat-msg-inner { align-items:flex-end; }
+.chat-meta-name { font-size:10px; color:var(--muted); margin-bottom:3px; }
+.chat-bubble { background:var(--surface2); border-radius:14px; padding:10px 14px; font-size:13px; line-height:1.55; border:1px solid var(--border); }
+.task-chat-msg-wrap.mine .chat-bubble { background:rgba(0,229,160,0.12); border-color:rgba(0,229,160,0.2); color:var(--text); border-radius:14px 14px 4px 14px; }
+.task-chat-msg-wrap.theirs .chat-bubble { border-radius:14px 14px 14px 4px; }
+.chat-meta-time { font-size:10px; color:var(--muted); margin-top:3px; }
+.chat-empty-state { text-align:center; padding:32px 20px; color:var(--muted); display:flex; flex-direction:column; align-items:center; gap:6px; flex:1; justify-content:center; }
+
+.task-chat-input-row { display:flex; gap:8px; padding:12px 14px; border-top:1px solid var(--border); flex-shrink:0; }
+.task-chat-input-row .form-control { flex:1; min-height:44px; max-height:100px; resize:none; }
+.task-send-btn { padding:0 16px!important; font-size:18px!important; align-self:flex-end; height:44px; }
+
 .bubble-update { background:rgba(0,153,255,0.1)!important; color:var(--accent2)!important; }
-.task-chat-input-row { display:flex; gap:8px; padding:12px; border-top:1px solid var(--border); }
-.task-chat-input-row .form-control { flex:1; }
 
 /* MODALS */
 .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:100; align-items:center; justify-content:center; animation:fadeIn 0.2s ease; }

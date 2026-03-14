@@ -375,12 +375,44 @@
 
     <!-- MEMBER VIEWS -->
     <div id="view-my-tasks" class="view">
-      <div class="page-header"><div class="page-title">📋 My <span>Tasks</span></div><div class="page-sub">Tasks assigned to you by your leader</div></div>
-      <div class="card"><div class="task-list" id="myTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks assigned yet</div></div></div></div>
+      <div class="page-header">
+        <div><div class="page-title">📋 My <span>Tasks</span></div><div class="page-sub">Apne tasks manage karo</div></div>
+      </div>
+      <!-- Self Task Creation Form -->
+      <div class="card" style="max-width:640px;margin-bottom:20px">
+        <div class="card-header" style="margin-bottom:16px">
+          <div class="card-title">➕ Naya Task Banao</div>
+          <span style="font-size:12px;color:var(--muted)">Khud ke liye ya team ke liye</span>
+        </div>
+        <div class="form-group"><label class="form-label">Task Title *</label><input class="form-control" id="myTaskTitle" placeholder="e.g. Arvind se payment lena, report banani hai..."/></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea class="form-control" id="myTaskDesc" rows="2" placeholder="Task ki details..."></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Priority</label><select class="form-control" id="myTaskPriority"><option value="medium">Medium</option><option value="high">High</option><option value="low">Low</option></select></div>
+          <div class="form-group"><label class="form-label">Due Date</label><input class="form-control" type="date" id="myTaskDue"/></div>
+        </div>
+        <div class="flex-end"><button class="btn-primary" onclick="createMyTask()">Add Task ➤</button></div>
+      </div>
+      <div class="card"><div class="task-list" id="myTasksList"><div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">No tasks yet. Upar form se banao!</div></div></div></div>
     </div>
+
     <div id="view-my-reminders" class="view">
       <div class="page-header"><div class="page-title">🔔 My <span>Reminders</span></div></div>
-      <div class="card"><div id="myRemindersList"></div></div>
+      <!-- Self Reminder Creation Form -->
+      <div class="card" style="max-width:580px;margin-bottom:20px">
+        <div class="card-title" style="margin-bottom:16px">➕ Reminder Add Karo</div>
+        <div class="form-group"><label class="form-label">Reminder Title *</label><input class="form-control" id="myRemTitle" placeholder="e.g. Arvind se 5lakh payment lena, Meeting at 3pm..."/></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Date &amp; Time *</label><input class="form-control" type="datetime-local" id="myRemTime"/></div>
+          <div class="form-group"><label class="form-label">Kiske liye</label>
+            <select class="form-control" id="myRemFor">
+              <option value="self">Sirf Mujhe</option>
+              <option value="all">Sabko (All Team)</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex-end"><button class="btn-primary" onclick="createMyReminder()">Set Reminder 🔔</button></div>
+      </div>
+      <div class="card"><div class="card-title" style="margin-bottom:16px">My Reminders</div><div id="myRemindersList"><div class="empty-state"><div class="empty-icon">🔔</div><div class="empty-text">No reminders yet</div></div></div></div>
     </div>
     <div id="view-my-progress" class="view">
       <div class="page-header"><div class="page-title">📈 My <span>Progress</span></div></div>
@@ -400,24 +432,37 @@
 
 <!-- MODAL: Task Chat -->
 <div class="modal-overlay" id="taskUpdateModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal('taskUpdateModal')">✕</button>
-    <div class="modal-title">💬 Task Update &amp; Chat</div>
-    <div class="task-update-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;font-size:13px;background:var(--surface2);padding:12px;border-radius:10px">
-      <div><span style="color:var(--muted)">Task:</span> <strong id="taskUpdateTitle">—</strong></div>
-      <div><span style="color:var(--muted)">Assignee:</span> <span id="taskUpdateAssignee">—</span></div>
-      <div><span style="color:var(--muted)">Due:</span> <span id="taskUpdateDue">—</span></div>
-      <div><span style="color:var(--muted)">Status:</span>
-        <select class="form-control" id="taskUpdateStatus" style="display:inline-block;width:auto;padding:2px 8px;margin-left:6px" onchange="updateTaskStatus()">
-          <option value="pending">⏳ Pending</option><option value="inprogress">🔄 In Progress</option><option value="review">👁 Review</option><option value="done">✅ Done</option>
+  <div class="modal task-chat-modal">
+    <button class="modal-close" onclick="closeTaskChat()">✕</button>
+    <div class="task-chat-header">
+      <div class="task-chat-header-top">
+        <div class="task-chat-icon">💬</div>
+        <div class="task-chat-meta">
+          <div class="task-chat-title" id="taskUpdateTitle">Task</div>
+          <div class="task-chat-sub">
+            <span id="taskUpdateAssignee" class="tcu-assignee">—</span>
+            <span id="taskUpdateDue" class="tcu-due">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="task-status-bar">
+        <span style="font-size:12px;color:var(--muted)">Status:</span>
+        <select class="form-control task-status-select" id="taskUpdateStatus" onchange="updateTaskStatus()">
+          <option value="pending">⏳ Pending</option>
+          <option value="inprogress">🔄 In Progress</option>
+          <option value="review">👁 Review</option>
+          <option value="done">✅ Done</option>
         </select>
+        <span class="task-chat-created" id="taskChatCreatedBy"></span>
       </div>
     </div>
     <div class="task-chat-container">
-      <div class="task-chat-messages" id="taskChatMessages"></div>
+      <div class="task-chat-messages" id="taskChatMessages">
+        <div class="chat-empty-state"><div style="font-size:32px">💬</div><div>Yahan conversation shuru karo</div><div style="font-size:11px;margin-top:4px">Task update, sawaal ya progress share karo</div></div>
+      </div>
       <div class="task-chat-input-row">
-        <textarea class="form-control" id="taskChatInput" rows="2" placeholder="Write update or message... (Enter to send)" onkeydown="taskChatKeyDown(event)"></textarea>
-        <button class="btn-primary" onclick="sendTaskChat()">Send</button>
+        <textarea class="form-control" id="taskChatInput" rows="2" placeholder="Update, sawaal ya progress likho... (Enter = send)" onkeydown="taskChatKeyDown(event)"></textarea>
+        <button class="btn-primary task-send-btn" onclick="sendTaskChat()">➤</button>
       </div>
     </div>
   </div>
