@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TPS Client Desk AI — User Manual | Tarningpoint Marketing</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700;900&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap');
+
+  :root {
+    --tp-red:#c0392b; --tp-orange:#e67e22; --tp-gold:#f39c12;
+    --tp-dark:#1a1a2e; --tp-mid:#16213e; --tp-light:#0f3460;
+    --accent:#00e5a0; --text:#1a1a2e; --muted:#666;
+    --border:#e0e0e0; --surface:#f8f9fa; --card:#ffffff;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+
+  body {
+    font-family:'Noto Sans','Noto Sans Devanagari',Arial,sans-serif;
+    color:var(--text); background:#fff; font-size:14px; line-height:1.7;
+  }
+
+  /* ── PRINT ── */
+  @media print {
+    .no-print { display:none !important; }
+    .page-break { page-break-before:always; }
+    .cover { page-break-after:always; }
+    body { font-size:13px; }
+    .section { page-break-inside:avoid; }
+    a { color:inherit; text-decoration:none; }
+  }
+
+  /* ── COVER PAGE ── */
+  .cover {
+    background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+    color:#fff; min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center;
+    padding:60px 40px; position:relative; overflow:hidden;
+  }
+  .cover::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(circle at 30% 40%,rgba(192,57,43,0.15),transparent 60%),
+               radial-gradient(circle at 70% 70%,rgba(243,156,18,0.1),transparent 50%);
+  }
+  .cover-logo {
+    width:90px; height:90px;
+    background:linear-gradient(135deg,#f39c12,#c0392b);
+    border-radius:24px; display:flex; align-items:center; justify-content:center;
+    font-size:48px; font-weight:900; color:#fff; margin-bottom:28px;
+    box-shadow:0 8px 32px rgba(192,57,43,0.4); position:relative; z-index:1;
+  }
+  .cover h1 {
+    font-size:36px; font-weight:900; margin-bottom:8px;
+    background:linear-gradient(135deg,#f39c12,#e67e22);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text; position:relative; z-index:1;
+  }
+  .cover h2 {
+    font-size:18px; font-weight:600; color:rgba(255,255,255,0.85);
+    margin-bottom:6px; position:relative; z-index:1;
+  }
+  .cover-sub {
+    font-size:14px; color:rgba(255,255,255,0.55); margin-bottom:40px;
+    position:relative; z-index:1;
+  }
+  .cover-badge {
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+    border-radius:12px; padding:20px 32px; margin-bottom:24px;
+    position:relative; z-index:1; max-width:480px;
+  }
+  .cover-badge p { color:rgba(255,255,255,0.7); font-size:13px; line-height:1.8; }
+  .cover-meta {
+    font-size:12px; color:rgba(255,255,255,0.4);
+    position:relative; z-index:1;
+  }
+  .cover-tags {
+    display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+    margin-bottom:32px; position:relative; z-index:1;
+  }
+  .cover-tag {
+    background:rgba(0,229,160,0.15); border:1px solid rgba(0,229,160,0.3);
+    border-radius:20px; color:#00e5a0; font-size:12px; padding:5px 14px; font-weight:600;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper { max-width:860px; margin:0 auto; padding:40px 32px; }
+  @media(max-width:640px) { .wrapper { padding:24px 16px; } }
+
+  /* ── TOC ── */
+  .toc { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:28px 32px; margin-bottom:48px; }
+  .toc h2 { font-size:20px; font-weight:800; margin-bottom:20px; color:var(--tp-dark); display:flex; align-items:center; gap:10px; }
+  .toc ol { padding-left:24px; }
+  .toc li { margin-bottom:6px; }
+  .toc a { color:var(--tp-light); text-decoration:none; font-weight:500; font-size:14px; }
+  .toc a:hover { color:var(--tp-red); }
+  .toc .toc-sub { font-size:13px; color:var(--muted); padding-left:20px; margin-top:4px; }
+
+  /* ── SECTION HEADINGS ── */
+  .section-heading {
+    display:flex; align-items:center; gap:12px;
+    background:linear-gradient(135deg,var(--tp-dark),var(--tp-mid));
+    color:#fff; border-radius:12px; padding:16px 24px; margin:40px 0 24px;
+  }
+  .section-heading .icon { font-size:24px; }
+  .section-heading h2 { font-size:18px; font-weight:800; }
+  .section-heading .num {
+    background:linear-gradient(135deg,var(--tp-orange),var(--tp-gold));
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:900; flex-shrink:0;
+  }
+
+  h3 { font-size:16px; font-weight:700; color:var(--tp-dark); margin:24px 0 12px; padding-left:12px; border-left:4px solid var(--tp-orange); }
+  h4 { font-size:14px; font-weight:700; color:var(--tp-light); margin:16px 0 8px; }
+  p { margin-bottom:12px; color:#333; }
+
+  /* ── CARDS ── */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+  .card-warn { border-left:4px solid var(--tp-gold); background:#fffbf0; }
+  .card-tip  { border-left:4px solid var(--accent); background:#f0fff8; }
+  .card-info { border-left:4px solid var(--tp-light); background:#f0f4ff; }
+  .card-danger { border-left:4px solid var(--tp-red); background:#fff5f5; }
+
+  /* ── PROMPT BOX ── */
+  .prompt-box {
+    background:linear-gradient(135deg,#1a1a2e,#16213e);
+    border-radius:12px; padding:16px 20px; margin:12px 0; position:relative;
+    border-left:4px solid var(--accent);
+  }
+  .prompt-box .label {
+    font-size:10px; font-weight:700; color:var(--accent);
+    text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;
+  }
+  .prompt-box .prompt-text {
+    color:#fff; font-size:14px; line-height:1.8; font-family:monospace;
+  }
+  .prompt-box .prompt-note {
+    color:rgba(255,255,255,0.45); font-size:11px; margin-top:8px; font-style:italic;
+  }
+  .prompt-group { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:20px; }
+  .prompt-group h4 { margin-top:0; }
+
+  /* ── STEP LIST ── */
+  .step-list { list-style:none; padding:0; }
+  .step-list li {
+    display:flex; gap:14px; align-items:flex-start; margin-bottom:14px;
+    padding:14px 18px; background:var(--surface); border-radius:10px; border:1px solid var(--border);
+  }
+  .step-num {
+    background:linear-gradient(135deg,var(--tp-orange),var(--tp-gold));
+    color:#fff; width:28px; height:28px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; flex-shrink:0;
+  }
+  .step-content { flex:1; }
+  .step-content strong { display:block; margin-bottom:4px; font-size:14px; }
+  .step-content span { font-size:13px; color:var(--muted); }
+
+  /* ── TABLE ── */
+  table { width:100%; border-collapse:collapse; margin-bottom:20px; font-size:13px; }
+  th { background:linear-gradient(135deg,var(--tp-dark),var(--tp-mid)); color:#fff; padding:10px 14px; text-align:left; font-weight:700; }
+  td { padding:10px 14px; border-bottom:1px solid var(--border); }
+  tr:nth-child(even) td { background:var(--surface); }
+  tr:hover td { background:#f0f4ff; }
+
+  /* ── ROLE BADGES ── */
+  .badge { display:inline-block; border-radius:20px; padding:3px 12px; font-size:11px; font-weight:700; }
+  .badge-admin  { background:rgba(192,57,43,0.12); color:var(--tp-red); border:1px solid rgba(192,57,43,0.25); }
+  .badge-leader { background:rgba(243,156,18,0.12); color:#b7770d; border:1px solid rgba(243,156,18,0.25); }
+  .badge-member { background:rgba(0,229,160,0.12); color:#007a4d; border:1px solid rgba(0,229,160,0.25); }
+
+  /* ── CHEAT SHEET ── */
+  .cheat-sheet {
+    background:linear-gradient(135deg,#1a1a2e,#0f3460);
+    border-radius:16px; padding:28px 32px; margin:32px 0; color:#fff;
+  }
+  .cheat-sheet h3 { color:#f39c12; border-left-color:#f39c12; font-size:18px; }
+  .cheat-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; }
+  @media(max-width:640px) { .cheat-row { grid-template-columns:1fr; } }
+  .cheat-col h4 { color:#00e5a0; font-size:13px; margin-bottom:10px; margin-top:0; border:none; padding:0; }
+  .cheat-item { background:rgba(255,255,255,0.07); border-radius:8px; padding:8px 12px; margin-bottom:8px; }
+  .cheat-item .ci-prompt { font-family:monospace; font-size:13px; color:#fff; }
+  .cheat-item .ci-result { font-size:11px; color:rgba(255,255,255,0.5); margin-top:2px; }
+
+  /* ── GRID CARDS ── */
+  .feature-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  @media(max-width:640px) { .feature-grid { grid-template-columns:1fr; } }
+  .feature-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .feature-card .fc-icon { font-size:28px; margin-bottom:8px; }
+  .feature-card .fc-title { font-size:14px; font-weight:700; margin-bottom:4px; }
+  .feature-card .fc-desc { font-size:12px; color:var(--muted); line-height:1.6; }
+
+  /* ── NOTIF PREVIEW ── */
+  .notif-demo {
+    background:linear-gradient(135deg,#1a1a2e,#16213e);
+    border-radius:12px; padding:16px 20px; margin:12px 0;
+    display:flex; align-items:center; gap:14px;
+    border-left:4px solid var(--accent);
+    color:#fff;
+  }
+  .notif-demo.overdue { border-left-color:#ff6b6b; }
+  .notif-demo.chat { border-left-color:#4f9cf9; }
+  .notif-demo.reminder { border-left-color:#f39c12; }
+  .nd-icon { font-size:24px; width:44px; height:44px; background:rgba(255,255,255,0.08); border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .nd-body { flex:1; }
+  .nd-title { font-weight:700; font-size:14px; }
+  .nd-msg { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
+
+  /* ── DIVIDER ── */
+  .divider { height:1px; background:var(--border); margin:32px 0; }
+  .section-end { text-align:center; color:var(--muted); font-size:12px; padding:16px 0; }
+
+  /* ── PRINT BTN ── */
+  .print-bar {
+    position:fixed; bottom:24px; right:24px; z-index:999;
+    display:flex; gap:10px;
+  }
+  .print-btn {
+    background:linear-gradient(135deg,#c0392b,#e67e22);
+    color:#fff; border:none; border-radius:12px;
+    padding:14px 24px; font-size:14px; font-weight:700;
+    cursor:pointer; box-shadow:0 4px 20px rgba(192,57,43,0.4);
+    transition:transform 0.2s;
+  }
+  .print-btn:hover { transform:translateY(-2px); }
+  .print-btn.pdf-btn { background:linear-gradient(135deg,#1a1a2e,#0f3460); }
+
+  ul, ol { padding-left:20px; margin-bottom:12px; }
+  li { margin-bottom:6px; line-height:1.7; }
+  code { background:#f0f4ff; border:1px solid #d0d9f0; border-radius:5px; padding:2px 7px; font-size:12px; font-family:monospace; color:var(--tp-light); }
+  strong { color:var(--tp-dark); }
+  .text-muted { color:var(--muted); font-size:13px; }
+  .highlight { background:linear-gradient(135deg,rgba(243,156,18,0.1),rgba(192,57,43,0.05)); border:1px solid rgba(243,156,18,0.2); border-radius:8px; padding:10px 14px; margin:10px 0; }
+</style>
+</head>
+<body>
+
+<!-- PRINT BUTTON -->
+<div class="print-bar no-print">
+  <button class="print-btn pdf-btn" onclick="window.print()">🖨️ PDF Print Karo</button>
+</div>
+
+<!-- ════════════════ COVER PAGE ════════════════ -->
+<div class="cover">
+  <div class="cover-logo">T</div>
+  <h1>TPS Client Desk AI</h1>
+  <h2>Tarningpoint Marketing — Team Manual</h2>
+  <p class="cover-sub">Powered by Wisefox Solution &nbsp;|&nbsp; Version 5.0</p>
+
+  <div class="cover-tags">
+    <span class="cover-tag">👑 Admin Guide</span>
+    <span class="cover-tag">🏅 Leader Guide</span>
+    <span class="cover-tag">👤 Member Guide</span>
+    <span class="cover-tag">🤖 AI Prompts</span>
+  </div>
+
+  <div class="cover-badge">
+    <p>
+      Yeh manual <strong style="color:#fff">Tarningpoint Marketing</strong> ke sabhi team members ke liye hai.<br/>
+      Is manual mein aap sikhenge ki TPS Client Desk AI app ko efficiently kaise use karein —<br/>
+      Tasks, Reminders, Notes, AI Chat, Live Notifications aur Team Management.
+    </p>
+  </div>
+
+  <div class="cover-meta">
+    Confidential — Sirf Tarningpoint Marketing Internal Use &nbsp;|&nbsp; March 2026
+  </div>
+</div>
+
+<!-- ════════════════ MAIN CONTENT ════════════════ -->
+<div class="wrapper">
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc">
+    <h2>📋 Table of Contents</h2>
+    <ol>
+      <li><a href="#sec-intro">App ka Parichay — Kya hai TPS Client Desk AI?</a></li>
+      <li><a href="#sec-roles">Roles aur Permissions — Admin, Leader, Member</a></li>
+      <li><a href="#sec-login">Login karna — Step by Step</a></li>
+      <li><a href="#sec-dashboard">Dashboard Overview</a></li>
+      <li><a href="#sec-tasks">Task Management — Banana, Assign karna, Track karna</a></li>
+      <li>
+        <a href="#sec-ai">AI Chatbot — Complete Guide with Prompts</a>
+        <div class="toc-sub">
+          • Chips se kaam karna &nbsp;|&nbsp; Hindi prompts &nbsp;|&nbsp; Task/Reminder/Note banana<br/>
+          • Members ko assign karna &nbsp;|&nbsp; Status check karna
+        </div>
+      </li>
+      <li><a href="#sec-reminders">Reminders — Banana aur Manage karna</a></li>
+      <li><a href="#sec-notes">Notes — Personal Notes Likhna</a></li>
+      <li><a href="#sec-notifications">Live Notifications — Browser + In-App</a></li>
+      <li><a href="#sec-chat">Task Conversation — Leader aur Member ke beech Chat</a></li>
+      <li><a href="#sec-admin">Admin Panel — Team aur Users Manage karna</a></li>
+      <li><a href="#sec-cheatsheet">Quick Reference — All Prompts Ek Jagah</a></li>
+      <li><a href="#sec-tips">Tips, Best Practices aur Common Mistakes</a></li>
+    </ol>
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 1: INTRO -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-intro" class="section-heading">
+    <span class="num">1</span>
+    <span class="icon">🏢</span>
+    <div>
+      <h2>App ka Parichay</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Kya hai TPS Client Desk AI?</div>
+    </div>
+  </div>
+
+  <p><strong>TPS Client Desk AI</strong> ek modern task management aur team coordination app hai jo specifically <strong>Tarningpoint Marketing</strong> ke liye banaya gaya hai. Yeh app Google login se secure hai aur real-time mein kaam karta hai — matlab ek member jo update kare woh turant baaki team ko dikh jata hai.</p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">📋</div>
+      <div class="fc-title">Task Management</div>
+      <div class="fc-desc">Tasks banana, assign karna, track karna. Leader kisi bhi member ko task de sakta hai. Member khud ke liye bhi task bana sakta hai.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🤖</div>
+      <div class="fc-title">AI Assistant (Hindi)</div>
+      <div class="fc-desc">Hindi, English, Hinglish mein baat karo. AI khud samjhega aur task/reminder/note automatically banayega.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🔔</div>
+      <div class="fc-title">Live Notifications</div>
+      <div class="fc-desc">Naya task mila, koi message aaya, reminder due hai — sab kuch instantly popup aata hai screen pe aur browser mein bhi.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📝</div>
+      <div class="fc-title">Notes Module</div>
+      <div class="fc-desc">Personal notes likhne ke liye. Meetings, ideas, client details — sab notes mein save karo. Colors aur categories bhi set kar sakte ho.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">💬</div>
+      <div class="fc-title">Task Conversations</div>
+      <div class="fc-desc">Har task pe leader aur member chat kar sakte hain. Task kyu nahi hua, kaise karega — sab discuss kar sakte hain.</div>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📊</div>
+      <div class="fc-title">Progress Tracking</div>
+      <div class="fc-desc">Pending, In Progress, Done — task ka status dekhna aur update karna. Overdue tasks pe automatic alert aata hai.</div>
+    </div>
+  </div>
+
+  <div class="card card-tip">
+    <strong>💡 Tip:</strong> Yeh app mobile, tablet aur PC — teeno pe equally achha kaam karta hai. Mobile pe hamburger (☰) button se sidebar khulta hai.
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 2: ROLES -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-roles" class="section-heading">
+    <span class="num">2</span>
+    <span class="icon">👥</span>
+    <div>
+      <h2>Roles aur Permissions</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Admin, Leader, Member — kiske paas kya access hai</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th><span class="badge badge-admin">Admin</span></th>
+        <th><span class="badge badge-leader">Leader</span></th>
+        <th><span class="badge badge-member">Member</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Login karna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Dashboard dekhna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Khud ke liye task banana</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Dusre member ko task assign karna</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Task status update karna</td><td>✅</td><td>✅</td><td>✅ (apna)</td></tr>
+      <tr><td>Task pe chat karna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Reminder banana (khud ke liye)</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Reminder banana (sabke liye)</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Notes likhna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>AI Chatbot use karna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>AI se member ko task assign karna</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Team members dekhna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Members add/remove karna</td><td>✅</td><td>❌</td><td>❌</td></tr>
+      <tr><td>Teams banana</td><td>✅</td><td>❌</td><td>❌</td></tr>
+      <tr><td>Settings (API Key)</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>PIN change karna</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Dusre ka PIN reset karna</td><td>✅</td><td>❌</td><td>❌</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card card-warn">
+    <strong>⚠️ Dhyan Raho:</strong> Sirf <span class="badge badge-admin">Admin</span> hi new members add kar sakta hai aur teams bana sakta hai. Naya member join karwana ho toh admin se contact karo — <code>nil000nilesh@gmail.com</code>
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 3: LOGIN -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-login" class="section-heading">
+    <span class="num">3</span>
+    <span class="icon">🔐</span>
+    <div>
+      <h2>Login karna</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Pehli baar aur roz roz login kaise karein</div>
+    </div>
+  </div>
+
+  <h3>Pehli Baar Login (New Member)</h3>
+  <ul class="step-list">
+    <li>
+      <span class="step-num">1</span>
+      <div class="step-content">
+        <strong>App kholo</strong>
+        <span>Browser mein app ka link kholo (Admin ne share kiya hoga)</span>
+      </div>
+    </li>
+    <li>
+      <span class="step-num">2</span>
+      <div class="step-content">
+        <strong>"Google se Login Karo" pe click karo</strong>
+        <span>Apna Tarningpoint Google account select karo (ya jo email admin ne add ki ho)</span>
+      </div>
+    </li>
+    <li>
+      <span class="step-num">3</span>
+      <div class="step-content">
+        <strong>PIN Setup karo (pehli baar)</strong>
+        <span>4-digit security PIN choose karo. Yeh PIN roz login ke waqt maanga jayega. Yaad rakhna zaroori hai!</span>
+      </div>
+    </li>
+    <li>
+      <span class="step-num">4</span>
+      <div class="step-content">
+        <strong>PIN Enter karo</strong>
+        <span>PIN confirm karo aur "Verify" karo. App open ho jayega.</span>
+      </div>
+    </li>
+  </ul>
+
+  <div class="card card-info">
+    <strong>ℹ️ Roz Login ke liye:</strong> Google login → PIN enter karo → App directly open hoga. PIN 30 din tak valid hai.
+  </div>
+
+  <div class="card card-warn">
+    <strong>⚠️ PIN bhool gaye?</strong> Admin se contact karo. Admin aapka PIN reset kar dega, phir aap naya PIN set kar sakte ho.
+  </div>
+
+  <h3>Notifications Allow Karo (Important!)</h3>
+  <p>Login ke baad browser notification permission maangega. <strong>"Allow" zaroor karo</strong> — warna naye tasks, messages aur reminders ka notification nahi aayega.</p>
+  <div class="card card-tip">
+    <strong>💡 Mobile pe:</strong> Settings → App Permissions → Browser → Notifications → Allow karo.
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 4: DASHBOARD -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-dashboard" class="section-heading">
+    <span class="num">4</span>
+    <span class="icon">📊</span>
+    <div>
+      <h2>Dashboard Overview</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">App mein kya kahan hai</div>
+    </div>
+  </div>
+
+  <h3>Left Sidebar (Menu)</h3>
+  <table>
+    <thead><tr><th>Menu Item</th><th>Kya karta hai</th><th>Kaun dekh sakta hai</th></tr></thead>
+    <tbody>
+      <tr><td>🏠 Dashboard</td><td>Overall stats aur summary</td><td>Sabhi</td></tr>
+      <tr><td>📋 Tasks / My Tasks</td><td>Tasks dekhna aur manage karna</td><td>Sabhi</td></tr>
+      <tr><td>🔔 Reminders / My Reminders</td><td>Reminders dekhna aur banana</td><td>Sabhi</td></tr>
+      <tr><td>📓 Notes / My Notes</td><td>Personal notes likhna</td><td>Sabhi</td></tr>
+      <tr><td>👥 Members</td><td>Team ke sab members ki list</td><td>Sabhi</td></tr>
+      <tr><td>📁 Clients</td><td>Client records (Leader/Admin)</td><td>Leader, Admin</td></tr>
+      <tr><td>📈 My Progress</td><td>Apna task completion rate</td><td>Member</td></tr>
+      <tr><td>⚙️ Settings</td><td>API Key, PIN change</td><td>Leader, Admin</td></tr>
+      <tr><td>🛠️ Admin Panel</td><td>Teams aur users manage karna</td><td>Admin only</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Mobile pe Navigation</h3>
+  <p>Mobile pe screen ke top-left mein <strong>☰ (Hamburger)</strong> button hoga. Isse tap karo → Sidebar khulega. Kisi bhi option pe tap karo → Page change hoga → Sidebar automatically band ho jayega.</p>
+
+  <h3>Dashboard Stats</h3>
+  <p>Dashboard pe yeh information dikhti hai:</p>
+  <ul>
+    <li><strong>Total Tasks</strong> — kitne tasks hain total</li>
+    <li><strong>Pending</strong> — abhi karne wale tasks</li>
+    <li><strong>In Progress</strong> — jo chal rahi hain</li>
+    <li><strong>Done</strong> — completed tasks</li>
+    <li>Recent tasks, overdue tasks aur team activity</li>
+  </ul>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 5: TASKS -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-tasks" class="section-heading">
+    <span class="num">5</span>
+    <span class="icon">📋</span>
+    <div>
+      <h2>Task Management</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Tasks banana, assign karna, aur track karna</div>
+    </div>
+  </div>
+
+  <h3>Leader/Admin: Kisi Member ko Task Assign Karna</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Sidebar → "Tasks" pe jao</strong><span>Ya "Assign Task" button dhundho</span></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>Form bharao</strong><span>Task Title (zaroori), Description (optional), Member select karo, Priority (High/Medium/Low), Due Date set karo</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>"Assign Task" button dabao</strong><span>Task immediately assign ho jayega. Member ko notification aayega — screen pe aur browser mein bhi.</span></div></li>
+  </ul>
+
+  <h3>Member: Khud ke liye Task Banana</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Sidebar → "My Tasks" pe jao</strong><span>Upar "Apna Task Banao" section milega</span></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>Task title likho</strong><span>Priority choose karo, Due date optional</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>"Create Task" dabao</strong><span>Task turant create ho jayega aur list mein dikh jayega</span></div></li>
+  </ul>
+
+  <h3>Task Status Update Karna</h3>
+  <table>
+    <thead><tr><th>Status</th><th>Matlab</th><th>Kab use karein</th></tr></thead>
+    <tbody>
+      <tr><td>🟡 Pending</td><td>Shuru nahi hua</td><td>Task naya hai, abhi kaam shuru nahi kiya</td></tr>
+      <tr><td>🔵 In Progress</td><td>Chal raha hai</td><td>Kaam shuru kar diya, ho raha hai</td></tr>
+      <tr><td>✅ Done</td><td>Complete</td><td>Kaam pura ho gaya</td></tr>
+    </tbody>
+  </table>
+
+  <p>Task pe <strong>"Update" button</strong> click karo → Status change karo → Save karo. Status change hone pe dusri party ko notification milega.</p>
+
+  <div class="card card-warn">
+    <strong>⚠️ Overdue Alert:</strong> Agar task ki due date nikal gayi aur status "done" nahi hai, toh screen pe aur browser mein <strong>red alert popup</strong> aayega. Task jaldi complete karo ya leader se baat karo.
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 6: AI CHATBOT -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-ai" class="section-heading">
+    <span class="num">6</span>
+    <span class="icon">🤖</span>
+    <div>
+      <h2>AI Chatbot — Complete Guide</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Hindi mein baat karo, AI khud kaam karega</div>
+    </div>
+  </div>
+
+  <p>Screen ke <strong>niche-right corner mein 🤖 (robot) button</strong> hoga. Isse click karo → AI chat window khulega. Aap Hindi, English, ya Hinglish mein seedha likh sakte ho.</p>
+
+  <h3>Quick Action Chips (Sabse Aasaan Tarika)</h3>
+  <p>Jab bhi AI chat khulega, sabse niche <strong>4 colored buttons (chips)</strong> dikhenge:</p>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;padding:16px;background:#f8f9fa;border-radius:12px;">
+    <span style="background:rgba(0,229,160,0.12);border:1px solid rgba(0,229,160,0.3);border-radius:20px;color:#007a4d;padding:7px 16px;font-size:13px;font-weight:700;">📋 Task</span>
+    <span style="background:rgba(0,229,160,0.12);border:1px solid rgba(0,229,160,0.3);border-radius:20px;color:#007a4d;padding:7px 16px;font-size:13px;font-weight:700;">🔔 Reminder</span>
+    <span style="background:rgba(0,229,160,0.12);border:1px solid rgba(0,229,160,0.3);border-radius:20px;color:#007a4d;padding:7px 16px;font-size:13px;font-weight:700;">📝 Note</span>
+    <span style="background:rgba(0,229,160,0.12);border:1px solid rgba(0,229,160,0.3);border-radius:20px;color:#007a4d;padding:7px 16px;font-size:13px;font-weight:700;">📊 Status</span>
+  </div>
+
+  <h4>Chip Use Karne ka Tarika (Step by Step)</h4>
+
+  <div class="card card-info" style="margin-bottom:16px">
+    <strong>📋 Task Chip:</strong>
+    <ol style="margin-top:10px">
+      <li>📋 Task chip pe click karo</li>
+      <li>AI poochega: <em>"Kiske liye task banana hai?"</em></li>
+      <li>Buttons dikhenge: <strong>👤 Khud ke liye</strong>, <strong>[Member ke naam]</strong></li>
+      <li>Member select karo</li>
+      <li>Input box mein task title likho → Enter dabao</li>
+      <li>Task automatically ban jayega aur member ko notification jayega!</li>
+    </ol>
+  </div>
+
+  <div class="card card-info" style="margin-bottom:16px">
+    <strong>🔔 Reminder Chip:</strong>
+    <ol style="margin-top:10px">
+      <li>🔔 Reminder chip pe click karo</li>
+      <li>AI poochega: <em>"Kiske liye reminder set karna hai?"</em></li>
+      <li>Buttons: <strong>👤 Khud ke liye</strong>, <strong>[Members]</strong>, <strong>👥 Sabko</strong></li>
+      <li>Select karo, phir reminder title likho → Enter</li>
+      <li>Reminder save ho jayega!</li>
+    </ol>
+  </div>
+
+  <div class="card card-info" style="margin-bottom:16px">
+    <strong>📝 Note Chip:</strong>
+    <ol style="margin-top:10px">
+      <li>📝 Note chip pe click karo</li>
+      <li>Input box activate ho jayega</li>
+      <li>Note content seedha type karo → Enter</li>
+      <li>Note automatically "My Notes" mein save ho jayega</li>
+    </ol>
+  </div>
+
+  <div class="card card-info">
+    <strong>📊 Status Chip:</strong>
+    <ol style="margin-top:10px">
+      <li>📊 Status chip pe click karo</li>
+      <li>AI turant poori team ki status report dikhayega</li>
+      <li>Koi extra kuch type karne ki zaroorat nahi</li>
+    </ol>
+  </div>
+
+  <h3>Direct Hindi Prompts (Bina Chips ke)</h3>
+  <p>Aap seedha type karke bhi kaam kar sakte ho — AI Hindi samjhega:</p>
+
+  <div class="prompt-group">
+    <h4>📋 Tasks — Direct Prompts</h4>
+
+    <div class="prompt-box">
+      <div class="label">Khud ke liye task</div>
+      <div class="prompt-text">Mujhe aaj website update karni hai</div>
+      <div class="prompt-note">→ AI aapke liye task bana dega</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Khud ke liye task (urgent)</div>
+      <div class="prompt-text">Mujhe urgent client ka email bhejni hai</div>
+      <div class="prompt-note">→ High priority task banega</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Member ko task assign (Leader/Admin)</div>
+      <div class="prompt-text">Rahul ko task do: printer install karo, due 30 June</div>
+      <div class="prompt-note">→ Rahul ko task assign hoga, usse notification jayega</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Member ko task assign (alternative format)</div>
+      <div class="prompt-text">Priya ko website update task assign karo high priority</div>
+      <div class="prompt-note">→ Priya ko high priority task milega</div>
+    </div>
+  </div>
+
+  <div class="prompt-group">
+    <h4>🔔 Reminders — Direct Prompts</h4>
+
+    <div class="prompt-box">
+      <div class="label">Aaj ka reminder</div>
+      <div class="prompt-text">Mujhe aaj 6 baje meeting yaad dilana</div>
+      <div class="prompt-note">→ Aaj 6 PM pe reminder set hoga</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Kal ka reminder</div>
+      <div class="prompt-text">Kal subah 9 baje client call hai reminder set karo</div>
+      <div class="prompt-note">→ Kal 9 AM ka reminder</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Payment reminder</div>
+      <div class="prompt-text">Mujhe Arvind se 5 lakh ka payment lena hai aaj 6 baje</div>
+      <div class="prompt-note">→ Payment reminder aaj 6 PM</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Sham ka reminder</div>
+      <div class="prompt-text">Sham ko 4 baje office meeting hai mujhe batana</div>
+      <div class="prompt-note">→ 4 PM ka reminder</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Raat ka reminder</div>
+      <div class="prompt-text">Raat 8 baje report submit karni hai reminder do</div>
+      <div class="prompt-note">→ 8 PM ka reminder</div>
+    </div>
+  </div>
+
+  <div class="prompt-group">
+    <h4>📝 Notes — Direct Prompts</h4>
+
+    <div class="prompt-box">
+      <div class="label">Note banana</div>
+      <div class="prompt-text">Note: Client ABC ne 50K ka order diya, delivery 15 April</div>
+      <div class="prompt-note">→ Note save ho jayega "My Notes" mein</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Meeting notes</div>
+      <div class="prompt-text">Note karo: Aaj ki meeting mein decide hua ki campaign Friday se start hogi</div>
+      <div class="prompt-note">→ Meeting notes save hoga</div>
+    </div>
+  </div>
+
+  <div class="prompt-group">
+    <h4>📊 Status aur Reports</h4>
+
+    <div class="prompt-box">
+      <div class="label">Team ki poori report</div>
+      <div class="prompt-text">Team ka status dikhao</div>
+      <div class="prompt-note">→ All tasks, pending, done — complete report milegi</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Members ki list</div>
+      <div class="prompt-text">Members dikhao</div>
+      <div class="prompt-note">→ Poori team list with emails</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Apni tasks dekhna</div>
+      <div class="prompt-text">Mera task status dikhao</div>
+      <div class="prompt-note">→ Aapki sabhi tasks ki list</div>
+    </div>
+
+    <div class="prompt-box">
+      <div class="label">Help menu</div>
+      <div class="prompt-text">Help</div>
+      <div class="prompt-note">→ AI sab commands dobara dikhayega</div>
+    </div>
+  </div>
+
+  <h3>Time Format — AI Kaise Samjhega</h3>
+  <table>
+    <thead><tr><th>Aap Likhoge</th><th>AI Samjhega</th></tr></thead>
+    <tbody>
+      <tr><td>aaj</td><td>Aaj (Today)</td></tr>
+      <tr><td>kal</td><td>Kal (Tomorrow)</td></tr>
+      <tr><td>parso</td><td>Parso (Day After Tomorrow)</td></tr>
+      <tr><td>6 baje / 6 bajey</td><td>6:00 (morning/evening AI guess karega)</td></tr>
+      <tr><td>subah 9 baje</td><td>9:00 AM</td></tr>
+      <tr><td>sham 4 baje</td><td>4:00 PM</td></tr>
+      <tr><td>raat 8 baje</td><td>8:00 PM</td></tr>
+      <tr><td>6 pm / 6 am</td><td>Direct 6 PM / 6 AM</td></tr>
+      <tr><td>30 June / 15 march</td><td>Due Date</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card card-tip">
+    <strong>💡 Pro Tip:</strong> AI ko <em>natural Hindi mein</em> baat karo jaise apne dost se karte ho. "Mujhe aaj 6 baje Arvind se milna hai" — AI automatically reminder bana dega!
+  </div>
+
+  <div class="card card-warn">
+    <strong>⚠️ AI ke Limits:</strong>
+    <ul>
+      <li>Member naam galat likhoge toh AI bata dega "Member nahi mila"</li>
+      <li>Member sirf khud ke liye task/reminder bana sakta hai — dusre ko assign nahi kar sakta</li>
+      <li>AI ne jo kiya woh toast notification (green pop-up) se confirm hoga</li>
+    </ul>
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 7: REMINDERS -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-reminders" class="section-heading">
+    <span class="num">7</span>
+    <span class="icon">🔔</span>
+    <div>
+      <h2>Reminders</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Banana, manage karna, timely alerts paana</div>
+    </div>
+  </div>
+
+  <h3>Manual Reminder Banana</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Sidebar → "My Reminders" pe jao</strong><span>Upar "Naya Reminder Banao" form milega</span></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>Title likho</strong><span>Kya yaad dilana hai — e.g. "Client meeting prepare karo"</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>Date aur Time set karo</strong><span>Kab yaad dilana hai</span></div></li>
+    <li><span class="step-num">4</span><div class="step-content"><strong>"Sirf Mujhe" ya "Sabko" select karo</strong><span>Leader/Admin: Sabko choose kar sakta hai</span></div></li>
+    <li><span class="step-num">5</span><div class="step-content"><strong>"Reminder Set Karo" dabao</strong><span>Reminder save ho jayega</span></div></li>
+  </ul>
+
+  <h3>Reminder Alert Kaisa Aata Hai?</h3>
+  <div class="notif-demo reminder">
+    <div class="nd-icon">🔔</div>
+    <div class="nd-body">
+      <div class="nd-title">Reminder — Abhi Karo!</div>
+      <div class="nd-msg">Client meeting prepare karo</div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin-top:8px">Yeh popup screen pe top-right mein aata hai. Browser notification bhi aata hai (phone pe bhi!).</p>
+
+  <h3>Reminder Done Mark Karna</h3>
+  <p>Reminder ki list mein <strong>✓ (Done)</strong> button click karo → Reminder complete ho jayega aur list se hatega.</p>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 8: NOTES -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-notes" class="section-heading">
+    <span class="num">8</span>
+    <span class="icon">📝</span>
+    <div>
+      <h2>Notes Module</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Personal notes likhna aur organize karna</div>
+    </div>
+  </div>
+
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Sidebar → "My Notes" pe jao</strong><span>Left side mein notes ki list, right side mein editor</span></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>"+ New Note" button dabao</strong><span>Blank note open hogi turant</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>Title aur content likho</strong><span>Auto-save hota hai — manually save karne ki zaroorat nahi</span></div></li>
+    <li><span class="step-num">4</span><div class="step-content"><strong>Category aur Color set kar sakte ho</strong><span>Organize karne ke liye — e.g. "Clients", "Meetings", "Ideas"</span></div></li>
+  </ul>
+
+  <div class="card card-tip">
+    <strong>💡 AI se Note Banana:</strong> AI chat mein "Note: [content]" likho ya 📝 Note chip use karo → Note automatically "My Notes" mein save ho jayega!
+  </div>
+
+  <div class="card card-warn">
+    <strong>⚠️ Dhyan Raho:</strong> Notes sirf aapke apne hain — doosre members ya leader aapke notes nahi dekh sakte.
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 9: NOTIFICATIONS -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-notifications" class="section-heading">
+    <span class="num">9</span>
+    <span class="icon">🔔</span>
+    <div>
+      <h2>Live Notifications</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Browser + Screen popup — sab real-time mein</div>
+    </div>
+  </div>
+
+  <p>TPS app mein <strong>2 tarah ke notifications</strong> aate hain:</p>
+
+  <h3>1. In-App Screen Popup (App ke andar)</h3>
+  <p>Screen ke top-right corner mein colored popup aata hai:</p>
+
+  <div class="notif-demo" style="margin-bottom:10px">
+    <div class="nd-icon">📋</div>
+    <div class="nd-body">
+      <div class="nd-title">Naya Task Assign Hua!</div>
+      <div class="nd-msg">"Website update" — By Rahul Leader</div>
+    </div>
+  </div>
+
+  <div class="notif-demo chat" style="margin-bottom:10px">
+    <div class="nd-icon">💬</div>
+    <div class="nd-body">
+      <div class="nd-title">Rahul ne message bheja</div>
+      <div class="nd-msg">Task: "Client call" — Kal tak kar dena</div>
+    </div>
+  </div>
+
+  <div class="notif-demo overdue" style="margin-bottom:10px">
+    <div class="nd-icon">⚠️</div>
+    <div class="nd-body">
+      <div class="nd-title">Task Overdue Ho Gayi!</div>
+      <div class="nd-msg">"Report submit" — Due date nikal gayi</div>
+    </div>
+  </div>
+
+  <div class="notif-demo reminder" style="margin-bottom:20px">
+    <div class="nd-icon">🔔</div>
+    <div class="nd-body">
+      <div class="nd-title">Reminder — Abhi Karo!</div>
+      <div class="nd-msg">Client meeting prepare karo</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Notification Type</th><th>Color</th><th>Kab aata hai</th></tr></thead>
+    <tbody>
+      <tr><td>📋 Naya Task</td><td style="color:var(--accent)">● Green</td><td>Jab koi task assign kare</td></tr>
+      <tr><td>💬 New Message</td><td style="color:#4f9cf9">● Blue</td><td>Task pe koi message aaye</td></tr>
+      <tr><td>⚠️ Overdue</td><td style="color:#ff6b6b">● Red</td><td>Task ki due date nikal jaye</td></tr>
+      <tr><td>🔔 Reminder</td><td style="color:#f39c12">● Gold</td><td>Reminder ka waqt aa jaye</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2. Browser Notifications (Phone/PC)</h3>
+  <p>Agar app band ho ya doosre tab mein ho, browser notification aata hai — phone pe bhi!</p>
+
+  <div class="card card-warn">
+    <strong>⚠️ Notification nahi aa raha?</strong>
+    <ul>
+      <li>Browser mein notification permission allow karo</li>
+      <li>Mobile pe: Settings → Browser → Notifications → Allow</li>
+      <li>Chrome pe: Lock icon → Site Settings → Notifications → Allow</li>
+    </ul>
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 10: TASK CHAT -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-chat" class="section-heading">
+    <span class="num">10</span>
+    <span class="icon">💬</span>
+    <div>
+      <h2>Task Conversation</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Leader aur Member ke beech task pe chat</div>
+    </div>
+  </div>
+
+  <p>Har task pe <strong>leader aur member chat kar sakte hain</strong>. Isse clearly samajh aata hai ki task kyu nahi hua, kya problems hain, aur aage kaise hoga.</p>
+
+  <h3>Task Chat Kaise Kholein</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Tasks list mein apna task dhundho</strong><span>Ya "My Tasks" page pe jao</span></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>"💬 Chat" ya "Update" button dabao</strong><span>Task chat window khulega</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>Message type karo → Send karo</strong><span>Dusri party ko instantly notification aayega</span></div></li>
+  </ul>
+
+  <div class="card card-tip">
+    <strong>💡 Best Practice:</strong>
+    <ul>
+      <li><strong>Member:</strong> Task late ho rahi ho toh immediately chat karo — reason batao. Leader appreciate karega.</li>
+      <li><strong>Leader:</strong> Agar member ne update kiya hai toh reply karo — guidance do. Isse team trust badhti hai.</li>
+      <li>Chat mein <strong>clear aur short messages</strong> likho — jaise WhatsApp pe karte ho.</li>
+    </ul>
+  </div>
+
+  <div class="highlight">
+    <strong>Real Example:</strong><br/>
+    <strong>Leader:</strong> "Rahul, website update abhi tak nahi hua. Kya problem hai?"<br/>
+    <strong>Rahul:</strong> "Sir, hosting pe issue tha. Aaj sham 6 baje tak complete kar dunga."<br/>
+    <strong>Leader:</strong> "OK, kal client ko demo dena hai. 6 baje pakka karni hai."
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 11: ADMIN -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-admin" class="section-heading">
+    <span class="num">11</span>
+    <span class="icon">🛠️</span>
+    <div>
+      <h2>Admin Panel</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Teams aur Users manage karna (Admin only)</div>
+    </div>
+  </div>
+
+  <h3>Naya Team Leader Banana</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Sidebar → "Admin Panel" pe jao</strong></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>"New Team" section mein</strong><span>Team name likho, Leader ki Gmail email likho</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>"Create Team" dabao</strong><span>Team ban jayegi, leader ko role milega</span></div></li>
+  </ul>
+
+  <h3>Naya Member Add Karna</h3>
+  <ul class="step-list">
+    <li><span class="step-num">1</span><div class="step-content"><strong>Admin Panel → "Add Member" section</strong></div></li>
+    <li><span class="step-num">2</span><div class="step-content"><strong>Member ki Gmail email likho</strong><span>Wahi email jisse woh Google login karega</span></div></li>
+    <li><span class="step-num">3</span><div class="step-content"><strong>Team select karo → "Add Member" dabao</strong><span>Member add ho jayega. Woh ab app mein login kar sakta hai.</span></div></li>
+  </ul>
+
+  <h3>Member ka Role Change Karna</h3>
+  <p>Admin Panel → Users list → Role dropdown → "Member" ya "Leader" select karo → Automatically save ho jayega.</p>
+
+  <h3>Member ka PIN Reset Karna</h3>
+  <p>Agar koi member PIN bhool jaye: Admin Panel → Users list → <strong>"🔑 Reset PIN"</strong> button dabao → Member ka PIN delete ho jayega. Ab woh next login pe naya PIN set kar sakta hai.</p>
+
+  <div class="card card-warn">
+    <strong>⚠️ Admin ka Gmail:</strong> <code>nil000nilesh@gmail.com</code><br/>
+    Admin panel sirf is account se access hoga. Kabhi bhi share mat karo.
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 12: CHEAT SHEET -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-cheatsheet" class="section-heading page-break">
+    <span class="num">12</span>
+    <span class="icon">⚡</span>
+    <div>
+      <h2>Quick Reference — All Prompts</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Yeh page print karke rakho — sabse kaam ka!</div>
+    </div>
+  </div>
+
+  <div class="cheat-sheet">
+    <h3 style="margin-top:0">⚡ AI Prompt Cheat Sheet — Tarningpoint Marketing</h3>
+    <p style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:16px">🤖 button dabao → Niche likhe prompts type karo → Enter</p>
+
+    <div class="cheat-row">
+      <div class="cheat-col">
+        <h4>📋 TASKS (Leader/Admin)</h4>
+        <div class="cheat-item">
+          <div class="ci-prompt">Rahul ko task do: [kaam], due [date]</div>
+          <div class="ci-result">→ Rahul ko task assign</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Priya ko [kaam] task assign karo</div>
+          <div class="ci-result">→ Priya ko task</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Mujhe [kaam] karna hai</div>
+          <div class="ci-result">→ Khud ke liye task</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">📋 Task chip → Member select → Title likho</div>
+          <div class="ci-result">→ Sabse aasaan tarika!</div>
+        </div>
+
+        <h4 style="margin-top:16px">📊 STATUS</h4>
+        <div class="cheat-item">
+          <div class="ci-prompt">Team ka status dikhao</div>
+          <div class="ci-result">→ Poori team report</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Mera task status dikhao</div>
+          <div class="ci-result">→ Apni tasks</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Members dikhao</div>
+          <div class="ci-result">→ Team list</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">📊 Status chip dabao</div>
+          <div class="ci-result">→ Instant report</div>
+        </div>
+      </div>
+
+      <div class="cheat-col">
+        <h4>🔔 REMINDERS</h4>
+        <div class="cheat-item">
+          <div class="ci-prompt">Mujhe aaj 6 baje [kaam] yaad dilana</div>
+          <div class="ci-result">→ Aaj 6 PM reminder</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Kal subah 9 baje [meeting] hai</div>
+          <div class="ci-result">→ Kal 9 AM reminder</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Mujhe [naam] se [kaam] lena hai [time]</div>
+          <div class="ci-result">→ Payment/followup reminder</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">🔔 Reminder chip → Select → Title</div>
+          <div class="ci-result">→ Chip se aasaan</div>
+        </div>
+
+        <h4 style="margin-top:16px">📝 NOTES</h4>
+        <div class="cheat-item">
+          <div class="ci-prompt">Note: [content]</div>
+          <div class="ci-result">→ Note save</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">Note karo: [meeting mein kya hua]</div>
+          <div class="ci-result">→ Meeting note</div>
+        </div>
+        <div class="cheat-item">
+          <div class="ci-prompt">📝 Note chip → Content likho → Enter</div>
+          <div class="ci-result">→ My Notes mein save</div>
+        </div>
+
+        <h4 style="margin-top:16px">🆘 HELP</h4>
+        <div class="cheat-item">
+          <div class="ci-prompt">Help</div>
+          <div class="ci-result">→ Commands list</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.1)">
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center">
+        💡 Hindi, English, Hinglish — teeno mein kaam karta hai &nbsp;|&nbsp;
+        Notification ke liye browser permission Allow karna zaroori hai &nbsp;|&nbsp;
+        Wisefox Solution
+      </p>
+    </div>
+  </div>
+
+  <!-- ──────────────────────────────────────── -->
+  <!-- SECTION 13: TIPS -->
+  <!-- ──────────────────────────────────────── -->
+  <div id="sec-tips" class="section-heading">
+    <span class="num">13</span>
+    <span class="icon">💡</span>
+    <div>
+      <h2>Tips, Best Practices &amp; Common Mistakes</h2>
+      <div style="font-size:13px;color:rgba(255,255,255,0.7)">Yeh jaanna zaroori hai!</div>
+    </div>
+  </div>
+
+  <h3>Best Practices — Leader ke liye</h3>
+  <ul>
+    <li><strong>Roz subah status check karo</strong> — Dashboard → Overdue tasks pe sabse pehle dhyan do</li>
+    <li><strong>Task assign karte waqt due date hamesha set karo</strong> — Bina due date ke member ko urgency nahi pata</li>
+    <li><strong>Clear task title likho</strong> — "Website" ki jagah "Client ABC ki website homepage update karo"</li>
+    <li><strong>Overdue task pe turant chat karo</strong> — Member se puchho kya problem hai, judge mat karo</li>
+    <li><strong>Reminders use karo</strong> — Client follow-up, payment due dates, meetings — sab AI se set karo</li>
+  </ul>
+
+  <h3>Best Practices — Member ke liye</h3>
+  <ul>
+    <li><strong>Task mili toh acknowledge karo</strong> — Task pe chat mein "Got it, kal tak karunga" likho</li>
+    <li><strong>Status roz update karo</strong> — Pending se In Progress, phir Done. Leader ko pata chalega.</li>
+    <li><strong>Late ho raho ho toh pehle batao</strong> — Deadline nikal jaane ke baad nahi, pehle leader ko chat pe batao</li>
+    <li><strong>Notifications allow rakho</strong> — Warna naya task ya message miss ho sakta hai</li>
+    <li><strong>Notes use karo</strong> — Client ke details, meeting notes — notes mein save karo, bhuloge nahi</li>
+  </ul>
+
+  <h3>Common Mistakes aur Solutions</h3>
+  <table>
+    <thead><tr><th>Problem</th><th>Kya Hua</th><th>Solution</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Notification nahi aaya</td>
+        <td>Browser permission deny tha</td>
+        <td>Browser settings → Allow notifications for this site</td>
+      </tr>
+      <tr>
+        <td>AI ne member ka naam nahi pakda</td>
+        <td>Naam exact nahi tha</td>
+        <td>Chip se member select karo ya poora naam likho</td>
+      </tr>
+      <tr>
+        <td>Note save nahi hua</td>
+        <td>Internet connection issue</td>
+        <td>Internet check karo, page refresh karo, dobara try karo</td>
+      </tr>
+      <tr>
+        <td>Login nahi ho raha</td>
+        <td>Wrong Google account ya PIN bhool gaye</td>
+        <td>Correct Gmail use karo / Admin se PIN reset karwao</td>
+      </tr>
+      <tr>
+        <td>Task assign nahi ho raha (member)</td>
+        <td>Member doosron ko assign nahi kar sakta</td>
+        <td>Khud ke liye bana sakte ho — dusre ke liye leader se bolo</td>
+      </tr>
+      <tr>
+        <td>AI samajh nahi raha</td>
+        <td>Bahut complex sentence</td>
+        <td>Short aur simple likho: "Mujhe kal 9 baje meeting hai" works best</td>
+      </tr>
+      <tr>
+        <td>Mobile pe sidebar nahi dikh raha</td>
+        <td>Mobile mein hidden hota hai</td>
+        <td>Top-left ☰ button dabao → Sidebar khulega</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Security — Zaroori Baatein</h3>
+  <div class="card card-danger">
+    <ul>
+      <li>Apna <strong>4-digit PIN kisi ko mat batao</strong> — yeh personal security hai</li>
+      <li><strong>Admin ka password/email share mat karo</strong></li>
+      <li>Kisi public computer pe login kiya ho toh <strong>logout zaroor karo</strong></li>
+      <li>App ka link sirf team members ke saath share karo — outsiders ke saath nahi</li>
+    </ul>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="divider"></div>
+  <div style="text-align:center;padding:32px 0 48px;">
+    <div style="font-size:36px;margin-bottom:12px">T</div>
+    <div style="font-size:16px;font-weight:800;color:var(--tp-dark);margin-bottom:4px">TARNINGPOINT MARKETING</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">TPS Client Desk AI — Internal User Manual</div>
+    <div style="font-size:12px;color:var(--muted)">
+      Powered by <strong>Wisefox Solution</strong> &nbsp;|&nbsp; Version 5.0 &nbsp;|&nbsp; March 2026<br/>
+      For support: <code>nil000nilesh@gmail.com</code>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Auto page title
+document.title = 'TPS Client Desk AI — User Manual | Tarningpoint Marketing';
+</script>
+</body>
+</html>
