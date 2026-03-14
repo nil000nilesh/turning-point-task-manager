@@ -20,10 +20,11 @@ const firebaseConfig = {
   apiKey:            "AIzaSyAP6xYAgWtU8hyuJP2nximxRZRIJnwNgG0",
   authDomain:        "turning-point-task-manager.firebaseapp.com",
   projectId:         "turning-point-task-manager",
+  databaseURL:       "https://turning-point-task-manager-default-rtdb.firebaseio.com",
   storageBucket:     "turning-point-task-manager.firebasestorage.app",
   messagingSenderId: "922397311479",
-  appId:             "1:922397311479:web:0c4ed59ee86331261daef2",
-  measurementId:     "G-BX36LQ0T1J"
+  appId:             "1:922397311479:web:409b33be6ba412d01daef2",
+  measurementId:     "G-N4B2RJM9Z3"
 };
 
 const ADMIN_EMAIL     = "nil000nilesh@gmail.com";
